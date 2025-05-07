@@ -1648,16 +1648,23 @@ function movePlayer(steps) {
 function startGame() {
     if (!roomCode) return Promise.reject("No room code");
     
-    // Set first player
     return roomRef.child('players').once('value').then(snapshot => {
         const players = snapshot.val();
         const firstPlayerId = Object.keys(players)[0];
         
         return roomRef.update({
             status: "playing",
-            currentPlayer: firstPlayerId,
+            currentPlayer: firstPlayerId,  // Tetap set player pertama
             startedAt: firebase.database.ServerValue.TIMESTAMP
         });
+    }).then(() => {
+        console.log("Game started successfully!");
+        switchScreen('online-rules-screen');  // Tambahkan redirect
+        return Promise.resolve();  // Untuk chaining
+    }).catch(error => {
+        console.error("Gagal mulai game:", error);
+        alert("Error: " + error.message);
+        return Promise.reject(error);
     });
 }
 
@@ -1705,6 +1712,9 @@ function updateGameUI(roomData) {
         const startBtn = document.getElementById('host-start-btn');
         const readyPlayers = Object.values(playersData).filter(p => p.ready).length;
         startBtn.disabled = readyPlayers < 2 || roomData.status !== "waiting";
+
+        console.log("Ready Players:", readyPlayers, "Room Status:", roomData.status);
+
     }
 }
 
@@ -1901,15 +1911,20 @@ function initGame() {
     };
 
     // Host starts the game
-    document.getElementById('host-start-btn').onclick = function() {
+document.getElementById('host-start-btn').onclick = function() {
+    console.log("Tombol mulai diklik!"); // Debug 1: Cek klik terdeteksi
+    
     if (taskMode === 'system') {
         startGame().then(() => {
+            console.log("Redirect ke online-rules-screen..."); // Debug 2: Cek berhasil redirect
             switchScreen('online-rules-screen');
         }).catch(error => {
+            console.error("Error:", error); // Debug 3: Cek error detail
             alert('Gagal memulai game: ' + error);
         });
     } else {
         startGameWithCustomTasks().then(() => {
+            console.log("Redirect ke online-rules-screen (custom tasks)...");
             switchScreen('online-rules-screen');
         });
     }
