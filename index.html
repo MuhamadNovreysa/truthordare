@@ -1580,37 +1580,60 @@ function joinRoom(playerName, code) {
         });
     }).then(() => {
         setupRoomListeners();
+        switchScreen('guest-lobby-screen');         
+        document.getElementById('guest-room-code').textContent = roomCode;
         return roomCode;
     });
 }
 
 
     
-    function setupRoomListeners() {
+    
+    
+function setupRoomListeners() {
+    // Listener untuk update data room
     roomRef.on('value', (snapshot) => {
         const roomData = snapshot.val();
         if (roomData) {
             updateGameUI(roomData);
+            
+            // Auto-redirect guest ke lobby jika belum ada di screen yang benar
+            if (!isHost) {
+                const currentScreen = document.querySelector('.screen.active').id;
+                if (currentScreen !== 'guest-lobby-screen' && currentScreen !== 'game-screen') {
+                    switchScreen('guest-lobby-screen');
+                    document.getElementById('guest-room-code').textContent = roomCode;
+                }
+            }
         }
     });
     
+    // Listener untuk player baru bergabung
     roomRef.child('players').on('child_added', (snapshot) => {
         const player = snapshot.val();
         onPlayerJoined(player);
+        
+        // Jika ini adalah player sendiri yang baru join
+        if (snapshot.key === myPlayerId && !isHost) {
+            switchScreen('guest-lobby-screen');
+            document.getElementById('guest-room-code').textContent = roomCode;
+        }
     });
     
+    // Listener untuk update data player
     roomRef.child('players').on('child_changed', (snapshot) => {
         const player = snapshot.val();
         onPlayerUpdated(player);
     });
     
+    // Listener untuk status game
     roomRef.child('status').on('value', (snapshot) => {
         const status = snapshot.val();
         if (status === "playing") {
             onGameStarted();
         }
     });
-    }
+}
 
 function movePlayer(steps) {
     return roomRef.child('players/' + myPlayerId).transaction((player) => {
