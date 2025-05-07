@@ -1527,7 +1527,7 @@
                 const last = event.results.length - 1;
                 const command = event.results[last][0].transcript.trim().toUpperCase();
                 
-                if (command.includes("MULAI")) {
+                if (command.includes("MULAI")|| command.includes("LEMPAR DADU") || command.includes("JALAN") || command.includes("SEPI GO")) {
                     document.getElementById('mic-status').textContent = "Terdeteksi: " + command;
                     rollDice();
                 }
