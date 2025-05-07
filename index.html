@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ular Tangga Truth or Dare (Online & Offline)</title>
+    <title>Ular Tangga Truth or Dare</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Righteous&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -756,50 +756,63 @@
         }
 
         /* === CUSTOM TASKS STYLES === */
-        .task-inputs {
-            margin: 1rem 0;
+        .task-form-container {
             width: 100%;
+            max-width: 600px;
+            margin: 1rem auto;
+        }
+
+        .task-form {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .task-form h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            text-align: center;
         }
 
         .task-input-group {
             margin-bottom: 1rem;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 8px;
         }
 
-        .task-input-group h4 {
-            color: var(--primary);
+        .task-input-group label {
+            display: block;
             margin-bottom: 0.5rem;
+            color: var(--dark-gray);
+            font-weight: 600;
         }
 
-        .task-input-group textarea {
+        .task-input-group select,
+        .task-input-group textarea,
+        .task-input-group input {
             width: 100%;
             padding: 10px;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
-            resize: vertical;
-            min-height: 80px;
             font-family: 'Poppins', sans-serif;
         }
 
-        .task-input-group input, .task-input-group select {
-            padding: 8px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            margin-left: 10px;
+        .task-input-group textarea {
+            min-height: 100px;
+            resize: vertical;
         }
 
-        .task-type-selector {
+        .task-controls {
             display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 1rem 0;
+            justify-content: space-between;
+            margin-top: 1.5rem;
         }
 
-        .task-type-selector .btn-outline.active {
-            background-color: var(--primary);
-            color: white;
+        .task-counter {
+            text-align: center;
+            margin: 1rem 0;
+            color: var(--dark-gray);
+            font-size: 0.9rem;
         }
 
         /* === RESPONSIVE DESIGN === */
@@ -1007,25 +1020,39 @@
         <!-- SCREEN 6: CUSTOM TASKS (OFFLINE/ONLINE) -->
         <div class="screen" id="custom-tasks-screen">
             <div class="card">
-                <h1 class="text-center">Custom Truth/Dare</h1>
-                <p class="text-center">Pilih tipe tantangan dan masukkan teksnya:</p>
-                
-                <div class="task-type-selector">
-                    <button class="btn btn-outline active" data-type="system">
-                        <i class="fas fa-robot"></i> System Default
-                    </button>
-                    <button class="btn btn-outline" data-type="manual">
-                        <i class="fas fa-edit"></i> Custom Manual
-                    </button>
-                </div>
-
-                <div id="custom-tasks-container" style="display: none;">
-                    <div class="task-inputs">
-                        <!-- Will be filled by JavaScript -->
+                <div class="task-form-container">
+                    <h1 class="text-center">Custom Truth/Dare</h1>
+                    <p class="text-center" id="current-player-text">Giliran <span id="current-player-name"></span> untuk membuat tantangan</p>
+                    
+                    <div class="task-form">
+                        <h3>Tantangan Baru</h3>
+                        <div class="task-input-group">
+                            <label for="task-type">Jenis Tantangan</label>
+                            <select id="task-type">
+                                <option value="truth">Truth</option>
+                                <option value="dare">Dare</option>
+                            </select>
+                        </div>
+                        <div class="task-input-group">
+                            <label for="task-text">Teks Tantangan</label>
+                            <textarea id="task-text" placeholder="Masukkan teks truth/dare..."></textarea>
+                        </div>
+                        <div class="task-input-group">
+                            <label for="task-cell">Nomor Kotak (1-100)</label>
+                            <input type="number" id="task-cell" min="1" max="100" placeholder="Masukkan nomor kotak">
+                        </div>
+                        <div class="task-counter" id="task-counter">
+                            Anda telah membuat 0 dari 3 tantangan
+                        </div>
+                        <div class="task-controls">
+                            <button id="add-task-btn" class="btn btn-outline">
+                                <i class="fas fa-plus mr-1"></i> Tambah Lagi
+                            </button>
+                            <button id="done-task-btn" class="btn">
+                                <i class="fas fa-check mr-1"></i> Selesai
+                            </button>
+                        </div>
                     </div>
-                    <button id="save-tasks-btn" class="btn">
-                        <i class="fas fa-save"></i> Simpan Tantangan
-                    </button>
                 </div>
             </div>
         </div>
@@ -1081,7 +1108,8 @@
             </div>
         </div>
 
-        <!-- SCREEN 9: ROOM LOBBY (HOST) -->
+        <!-- SCREEN
+            <!-- SCREEN 9: ROOM LOBBY (HOST) -->
         <div class="screen" id="host-lobby-screen">
             <div class="card">
                 <h1 class="text-center">Room Anda</h1>
@@ -1100,8 +1128,9 @@
                     <i class="fas fa-play mr-1"></i> Mulai Game
                 </button>
             </div>
+        </div>
 
-                  <!-- SCREEN 10: JOIN ROOM -->
+        <!-- SCREEN 10: JOIN ROOM -->
         <div class="screen" id="join-room-screen">
             <div class="card">
                 <h1 class="text-center">Gabung Room</h1>
@@ -1140,44 +1169,7 @@
             </div>
         </div>
 
-        <!-- SCREEN 12: ONLINE RULES -->
-        <div class="screen" id="online-rules-screen">
-            <div class="card">
-                <h1 class="text-center">Aturan Main</h1>
-                <div class="rules-list">
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-users"></i></div>
-                        <p>Game akan berjalan secara bergiliran</p>
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-palette"></i></div>
-                        <p>Setiap pemain akan dapat pion warna berbeda</p>
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-microphone"></i></div>
-                        <p><strong>Bilang "MULAI" untuk lempar dadu</strong> (atau klik tombol)</p>
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-snake"></i></div>
-                        <p>Jika mendarat di:</p>
-                        <ul>
-                            <li><span style="color: var(--success);">Tangga (Hijau)</span>: Naik ke posisi spesifik</li>
-                            <li><span style="color: var(--danger);">Ular (Merah)</span>: Turun ke posisi spesifik</li>
-                            <li><span style="color: var(--warning);">Truth/Dare (Kuning)</span>: Pilih tantangan!</li>
-                        </ul>
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-trophy"></i></div>
-                        <p>Pemain pertama yang sampai di kotak 100 menang!</p>
-                    </div>
-                </div>
-                <button id="online-start-btn" class="btn">
-                    <i class="fas fa-play mr-1"></i> Mulai Game
-                </button>
-            </div>
-        </div>
-
-        <!-- SCREEN 13: GAME BOARD (FOR BOTH OFFLINE AND ONLINE) -->
+        <!-- SCREEN 12: GAME BOARD (FOR BOTH OFFLINE AND ONLINE) -->
         <div class="screen" id="game-screen">
             <div class="game-header">
                 <h1 class="game-title">Ular Tangga</h1>
@@ -1321,366 +1313,111 @@
         let socket;
         let myPlayerId = '';
         let maxPlayers = 2;
-        let customTasks = {
-            truth: {},
-            dare: {},
-            cellTypes: {}
-        };
-        let useCustomTasks = false;
-
-        // === VOICE RECOGNITION ===
-        function initVoiceControl() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            
-            if (!SpeechRecognition) {
-                document.getElementById('mic-btn').style.display = 'none';
-                document.getElementById('mic-status').textContent = "Browser tidak mendukung voice control!";
-                return;
-            }
-
-            recognition = new SpeechRecognition();
-            recognition.lang = 'id-ID';
-            recognition.continuous = true;
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            recognition.onstart = function() {
-                isListening = true;
-                document.getElementById('mic-btn').classList.add('active');
-                document.getElementById('mic-status').textContent = "Mendengarkan... (bilang 'MULAI')";
-            };
-
-            recognition.onend = function() {
-                isListening = false;
-                document.getElementById('mic-btn').classList.remove('active');
-                document.getElementById('mic-status').textContent = "Klik mic atau bilang 'MULAI'";
-                
-                // Auto-restart listening if game is active
-                if (document.getElementById('game-screen').classList.contains('active')) {
-                    setTimeout(() => {
-                        try {
-                            recognition.start();
-                        } catch (e) {
-                            console.error("Error restarting recognition:", e);
-                        }
-                    }, 500);
-                }
-            };
-
-            recognition.onresult = function(event) {
-                const last = event.results.length - 1;
-                const command = event.results[last][0].transcript.trim().toUpperCase();
-                
-                if (command.includes("MULAI")) {
-                    document.getElementById('mic-status').textContent = "Terdeteksi: " + command;
-                    rollDice();
-                }
-            };
-
-            recognition.onerror = function(event) {
-                console.error('Error:', event.error);
-                let errorMsg = "Error: ";
-                const micBtn = document.getElementById('mic-btn');
-                
-                micBtn.classList.remove('active');
-                micBtn.classList.add('error');
-                
-                switch(event.error) {
-                    case 'not-allowed':
-                        errorMsg = "Izin mikrofon ditolak. Klik ikon mic untuk mengizinkan.";
-                        break;
-                    case 'no-speech':
-                        errorMsg = "Tidak terdeteksi suara. Coba lagi.";
-                        break;
-                    case 'audio-capture':
-                        errorMsg = "Tidak ada mikrofon yang terdeteksi.";
-                        break;
-                    default:
-                        errorMsg = "Error: " + event.error;
-                }
-                
-                document.getElementById('mic-status').textContent = errorMsg;
-            };
-
-            document.getElementById('mic-btn').onclick = function() {
-                try {
-                    if (isListening) {
-                        recognition.stop();
-                    } else {
-                        recognition.start();
-                    }
-                } catch (error) {
-                    document.getElementById('mic-status').textContent = "Error: " + error.message;
-                }
-            };
-        }
-
-        // === ONLINE GAME FUNCTIONS ===
-        function initSocketConnection() {
-            // In a real app, you would connect to your WebSocket server here
-            // For this example, we'll simulate the connection
-            
-            console.log("Connecting to WebSocket server...");
-            
-            // Simulate connection
-            setTimeout(() => {
-                myPlayerId = 'player-' + Math.random().toString(36).substr(2, 9);
-                
-                // Simulate socket connection
-                socket = {
-                    send: function(data) {
-                        console.log("Sending data:", data);
-                        // In a real app, this would send to the server
-                    },
-                    close: function() {
-                        console.log("Connection closed");
-                    }
-                };
-                
-                document.getElementById('connection-status').textContent = "Terhubung";
-                document.getElementById('connection-status').className = "player-status ready";
-                
-                if (isHost) {
-                    // Generate room code
-                    roomCode = generateRoomCode();
-                    document.getElementById('room-code-display').textContent = roomCode;
-                    document.getElementById('guest-room-code').textContent = roomCode;
-                    document.getElementById('room-code-badge').textContent = "Room: " + roomCode;
-                    
-                    // Add host to player list
-                    const hostName = document.getElementById('host-name').value;
-                    addPlayerToList(hostName, myPlayerId, true);
-                    
-                    // Enable start button when enough players join
-                    updateStartButton();
-                }
-            }, 1000);
-        }
-
-        function generateRoomCode() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let result = '';
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-
-        function addPlayerToList(name, id, isAdmin = false) {
-            const playerList = isHost ? 
-                document.getElementById('host-player-list') : 
-                document.getElementById('guest-player-list');
-                
-            const playerItem = document.createElement('div');
-            playerItem.className = 'player-item';
-            playerItem.id = 'player-' + id;
-            
-            const playerInfo = document.createElement('div');
-            playerInfo.className = 'player-info';
-            
-            const playerAvatar = document.createElement('div');
-            playerAvatar.className = 'player-avatar';
-            playerAvatar.textContent = name.charAt(0).toUpperCase();
-            playerAvatar.style.backgroundColor = colors[playerList.children.length % colors.length];
-            
-            const playerName = document.createElement('span');
-            playerName.textContent = name;
-            
-            const playerStatus = document.createElement('div');
-            playerStatus.className = 'player-status';
-            playerStatus.textContent = isAdmin ? 'Admin' : 'Player';
-            if (isAdmin) playerStatus.classList.add('admin');
-            
-            playerInfo.appendChild(playerAvatar);
-            playerInfo.appendChild(playerName);
-            playerItem.appendChild(playerInfo);
-            playerItem.appendChild(playerStatus);
-            playerList.appendChild(playerItem);
-            
-            if (isHost) {
-                updateStartButton();
-            }
-        }
-
-        function updateStartButton() {
-            if (!isHost) return;
-            
-            const playerCount = document.getElementById('host-player-list').children.length;
-            const startBtn = document.getElementById('host-start-btn');
-            
-            if (playerCount >= 2) {
-                startBtn.disabled = false;
-            } else {
-                startBtn.disabled = true;
-            }
-        }
-
-        function simulatePlayerJoin() {
-            // In a real app, this would be handled by the server
-            if (!isHost) return;
-            
-            const names = ['Budi', 'Ani', 'Citra', 'Dodi', 'Eka', 'Fajar', 'Gita', 'Hadi'];
-            const randomName = names[Math.floor(Math.random() * names.length)];
-            const randomId = 'player-' + Math.random().toString(36).substr(2, 9);
-            
-            setTimeout(() => {
-                addPlayerToList(randomName, randomId);
-                
-                // Simulate another player joining after some time
-                if (document.getElementById('host-player-list').children.length < maxPlayers) {
-                    simulatePlayerJoin();
-                }
-            }, 2000);
-        }
-
-        function startOnlineGame() {
-            // In a real app, this would notify all players via the server
-            console.log("Starting online game...");
-            
-            // Get players from the lobby
-            const playerItems = document.getElementById('host-player-list').children;
-            players = [];
-            
-            for (let i = 0; i < playerItems.length; i++) {
-                const playerName = playerItems[i].querySelector('.player-info span').textContent;
-                const playerColor = playerItems[i].querySelector('.player-avatar').style.backgroundColor;
-                
-                players.push({
-                    name: playerName,
-                    color: playerColor,
-                    number: i + 1,
-                    id: playerItems[i].id.replace('player-', '')
-                });
-                
-                positions[playerName] = 1;
-            }
-            
-            // Initialize game
-            initBoard();
-            updateScoreboard();
-            updateCurrentTurn();
-            
-            // Show online status
-            document.getElementById('online-status').style.display = 'block';
-            
-            // Switch to game screen
-            switchScreen('game-screen');
-            
-            // Start voice control
-            initVoiceControl();
-        }
+        let customTasks = {};
+        let currentTaskPlayer = 0;
+        let tasksPerPlayer = {};
+        const maxTasksPerPlayer = 3;
 
         // === CUSTOM TASKS FUNCTIONS ===
         function showCustomTaskScreen() {
-            const container = document.getElementById('custom-tasks-container');
-            const taskInputs = document.querySelector('.task-inputs');
-            
-            if (useCustomTasks) {
-                container.style.display = 'block';
-                taskInputs.innerHTML = '';
-                
-                // Buat input untuk setiap warning cell
-                warningCells.forEach((cell, index) => {
-                    const group = document.createElement('div');
-                    group.className = 'task-input-group';
-                    
-                    group.innerHTML = `
-                        <h4>Kotak ${cell}</h4>
-                        <div>
-                            <label>Truth:</label>
-                            <textarea id="truth-${cell}" placeholder="Masukkan truth..."></textarea>
-                        </div>
-                        <div>
-                            <label>Dare:</label>
-                            <textarea id="dare-${cell}" placeholder="Masukkan dare..."></textarea>
-                        </div>
-                        <div style="margin-top: 10px;">
-                            <label>Gunakan: 
-                                <select id="type-${cell}">
-                                    <option value="truth">Truth</option>
-                                    <option value="dare">Dare</option>
-                                </select>
-                            </label>
-                        </div>
-                    `;
-                    
-                    taskInputs.appendChild(group);
-                });
-            } else {
-                container.style.display = 'none';
-            }
+            document.getElementById('current-player-name').textContent = players[currentTaskPlayer].name;
+            resetTaskForm();
+            updateTaskCounter();
+            switchScreen('custom-tasks-screen');
         }
 
-        function saveCustomTasks() {
-            // Reset custom tasks
-            customTasks = {
-                truth: {},
-                dare: {},
-                cellTypes: {}
-            };
+        function resetTaskForm() {
+            document.getElementById('task-type').value = 'truth';
+            document.getElementById('task-text').value = '';
+            document.getElementById('task-cell').value = '';
+        }
+
+        function updateTaskCounter() {
+            const playerName = players[currentTaskPlayer].name;
+            const taskCount = tasksPerPlayer[playerName] || 0;
+            document.getElementById('task-counter').textContent = 
+                `Anda telah membuat ${taskCount} dari ${maxTasksPerPlayer} tantangan`;
             
-            let hasContent = false;
-            
-            warningCells.forEach(cell => {
-                const truthVal = document.getElementById(`truth-${cell}`).value.trim();
-                const dareVal = document.getElementById(`dare-${cell}`).value.trim();
-                const type = document.getElementById(`type-${cell}`).value;
-                
-                if (truthVal) {
-                    customTasks.truth[cell] = truthVal;
-                    hasContent = true;
-                }
-                if (dareVal) {
-                    customTasks.dare[cell] = dareVal;
-                    hasContent = true;
-                }
-                
-                // Tandai cell yang menggunakan custom task
-                if (type && (truthVal || dareVal)) {
-                    customTasks.cellTypes[cell] = type;
-                }
-            });
-            
-            // Validasi jika memilih manual tapi tidak mengisi apapun
-            if (useCustomTasks && !hasContent) {
-                alert('Anda memilih custom tasks tapi belum mengisi apapun!');
+            // Disable "Tambah Lagi" button jika sudah mencapai maksimum
+            document.getElementById('add-task-btn').disabled = taskCount >= maxTasksPerPlayer;
+        }
+
+        function saveCurrentTask() {
+            const type = document.getElementById('task-type').value;
+            const text = document.getElementById('task-text').value.trim();
+            const cell = parseInt(document.getElementById('task-cell').value);
+            const playerName = players[currentTaskPlayer].name;
+
+            // Validasi input
+            if (!text) {
+                alert('Teks tantangan tidak boleh kosong!');
                 return false;
             }
+
+            if (isNaN(cell) || cell < 1 || cell > 100) {
+                alert('Nomor kotak harus antara 1-100!');
+                return false;
+            }
+
+            // Simpan task
+            if (!customTasks[playerName]) {
+                customTasks[playerName] = [];
+            }
+
+            customTasks[playerName].push({ type, text, cell });
             
+            // Update counter
+            tasksPerPlayer[playerName] = (tasksPerPlayer[playerName] || 0) + 1;
+            updateTaskCounter();
+
             return true;
+        }
+
+        function moveToNextPlayer() {
+            currentTaskPlayer++;
+            
+            if (currentTaskPlayer < players.length) {
+                showCustomTaskScreen();
+            } else {
+                // Semua pemain sudah mengisi, mulai game
+                if (isOnlineGame && isHost) {
+                    startOnlineGame();
+                } else {
+                    initGameBoard();
+                    switchScreen('game-screen');
+                }
+            }
         }
 
         // === GAME FUNCTIONS ===
         function initGame() {
             // Setup event listeners
-            document.getElementById('start-btn').onclick = function() {
-                switchScreen('mode-screen');
-            };
+            document.getElementById('start-btn').addEventListener('click', () => switchScreen('mode-screen'));
 
             // Mode selection
-            document.getElementById('offline-mode').onclick = function() {
+            document.getElementById('offline-mode').addEventListener('click', () => {
                 isOnlineGame = false;
                 switchScreen('rules-screen');
-            };
+            });
 
-            document.getElementById('online-mode').onclick = function() {
+            document.getElementById('online-mode').addEventListener('click', () => {
                 isOnlineGame = true;
                 switchScreen('online-options-screen');
-            };
+            });
 
             // Online game options
-            document.getElementById('create-room-btn').onclick = function() {
+            document.getElementById('create-room-btn').addEventListener('click', () => {
                 isHost = true;
                 switchScreen('create-room-screen');
-            };
+            });
 
-            document.getElementById('join-room-btn').onclick = function() {
+            document.getElementById('join-room-btn').addEventListener('click', () => {
                 isHost = false;
                 switchScreen('join-room-screen');
-            };
+            });
 
             // Create room
-            document.getElementById('create-room-confirm').onclick = function() {
+            document.getElementById('create-room-confirm').addEventListener('click', () => {
                 const name = document.getElementById('host-name').value;
                 maxPlayers = parseInt(document.getElementById('max-players').value);
                 
@@ -1692,12 +1429,12 @@
                 initSocketConnection();
                 switchScreen('host-lobby-screen');
                 
-                // Simulate players joining (in a real app, this would happen via the server)
+                // Simulate players joining
                 simulatePlayerJoin();
-            };
+            });
 
             // Join room
-            document.getElementById('join-room-confirm').onclick = function() {
+            document.getElementById('join-room-confirm').addEventListener('click', () => {
                 const name = document.getElementById('join-player-name').value;
                 const code = document.getElementById('room-code').value;
                 
@@ -1709,130 +1446,64 @@
                 initSocketConnection();
                 switchScreen('guest-lobby-screen');
                 
-                // Simulate being added to the game (in a real app, this would happen via the server)
+                // Simulate being added to the game
                 setTimeout(() => {
                     addPlayerToList(name, myPlayerId);
                 }, 1000);
-            };
+            });
 
             // Host starts the game
-            document.getElementById('host-start-btn').onclick = function() {
-                switchScreen('custom-tasks-screen');
-            };
-
-            // Task type selector
-            document.querySelectorAll('.task-type-selector button').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.task-type-selector button').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    useCustomTasks = this.dataset.type === 'manual';
-                    showCustomTaskScreen();
-                });
+            document.getElementById('host-start-btn').addEventListener('click', () => {
+                startCustomTasks();
             });
-
-            // Save custom tasks
-            document.getElementById('save-tasks-btn').addEventListener('click', function() {
-                if (saveCustomTasks()) {
-                    if (isOnlineGame && isHost) {
-                        startOnlineGame();
-                    } else {
-                        switchScreen('game-screen');
-                    }
-                }
-            });
-
-            // Start online game
-            document.getElementById('online-start-btn').onclick = function() {
-                startOnlineGame();
-            };
 
             // Offline game flow
-            document.getElementById('next-btn').onclick = function() {
-                switchScreen('count-screen');
-            };
+            document.getElementById('next-btn').addEventListener('click', () => switchScreen('count-screen'));
 
-            const countButtons = document.querySelectorAll('.count-btn');
-            countButtons.forEach(function(button) {
-                button.onclick = function() {
+            // Player count selection
+            document.querySelectorAll('.count-btn').forEach(button => {
+                button.addEventListener('click', function() {
                     playerCount = parseInt(this.getAttribute('data-count'));
                     setupPlayerInputs();
                     switchScreen('names-screen');
-                };
+                });
             });
 
-            document.getElementById('start-game-btn').onclick = function() {
-                startGame();
-            };
+            // Start offline game
+            document.getElementById('start-game-btn').addEventListener('click', () => startGame());
 
-            document.getElementById('roll-btn').onclick = function() {
-                rollDice();
-            };
+            // Custom tasks controls
+            document.getElementById('add-task-btn').addEventListener('click', () => {
+                if (saveCurrentTask()) {
+                    resetTaskForm();
+                }
+            });
 
-            document.getElementById('truth-btn').onclick = function() {
-                showTask('truth');
-            };
+            document.getElementById('done-task-btn').addEventListener('click', () => {
+                if ((tasksPerPlayer[players[currentTaskPlayer].name] || 0) === 0) {
+                    if (!saveCurrentTask()) {
+                        return;
+                    }
+                }
+                moveToNextPlayer();
+            });
 
-            document.getElementById('dare-btn').onclick = function() {
-                showTask('dare');
-            };
-
-            document.getElementById('continue-btn').onclick = function() {
-                continueGame();
-            };
-
-            document.getElementById('play-again-btn').onclick = function() {
-                resetGame();
-            };
+            // Game controls
+            document.getElementById('roll-btn').addEventListener('click', () => rollDice());
+            document.getElementById('truth-btn').addEventListener('click', () => showTask('truth'));
+            document.getElementById('dare-btn').addEventListener('click', () => showTask('dare'));
+            document.getElementById('continue-btn').addEventListener('click', () => continueGame());
+            document.getElementById('play-again-btn').addEventListener('click', () => resetGame());
 
             // Start with first screen
             switchScreen('start-screen');
-        }
-
-        function switchScreen(screenId) {
-            const screens = document.querySelectorAll('.screen');
-            screens.forEach(function(screen) {
-                if (screen.id === screenId) {
-                    screen.classList.add('active');
-                    
-                    // Initialize voice control when game screen appears
-                    if (screenId === 'game-screen') {
-                        initVoiceControl();
-                    }
-                } else {
-                    screen.classList.remove('active');
-                }
-            });
-        }
-
-        function setupPlayerInputs() {
-            const container = document.getElementById('player-inputs');
-            container.innerHTML = '';
-
-            for (let i = 0; i < playerCount; i++) {
-                const playerDiv = document.createElement('div');
-                playerDiv.className = 'player-input';
-
-                const colorDiv = document.createElement('div');
-                colorDiv.className = 'color-preview';
-                colorDiv.style.backgroundColor = colors[i];
-                colorDiv.textContent = i + 1;
-
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.placeholder = 'Nama Pemain ' + (i + 1);
-                input.required = true;
-
-                playerDiv.appendChild(colorDiv);
-                playerDiv.appendChild(input);
-                container.appendChild(playerDiv);
-            }
         }
 
         function startGame() {
             const inputs = document.querySelectorAll('#player-inputs input');
             let allValid = true;
 
-            inputs.forEach(function(input) {
+            inputs.forEach(input => {
                 if (input.value.trim() === '') {
                     allValid = false;
                     input.style.borderColor = 'var(--danger)';
@@ -1850,8 +1521,11 @@
             players = [];
             positions = {};
             currentPlayer = 0;
+            currentTaskPlayer = 0;
+            tasksPerPlayer = {};
+            customTasks = {};
 
-            inputs.forEach(function(input, index) {
+            inputs.forEach((input, index) => {
                 const player = {
                     name: input.value.trim(),
                     color: colors[index],
@@ -1859,13 +1533,19 @@
                 };
                 players.push(player);
                 positions[player.name] = 1;
+                tasksPerPlayer[player.name] = 0;
             });
 
-            // Show custom tasks screen
-            switchScreen('custom-tasks-screen');
+            // Start custom tasks
+            startCustomTasks();
         }
 
-        function initBoard() {
+        function startCustomTasks() {
+            currentTaskPlayer = 0;
+            showCustomTaskScreen();
+        }
+
+        function initGameBoard() {
             const board = document.getElementById('game-board');
             board.innerHTML = '';
 
@@ -1882,19 +1562,16 @@
 
                 if (snakes[i]) {
                     cell.classList.add('snake');
-                    // Add snake icon
                     const snakeIcon = document.createElement('i');
                     snakeIcon.className = 'fas fa-snake';
                     cell.appendChild(snakeIcon);
                 } else if (ladders[i]) {
                     cell.classList.add('ladder');
-                    // Add ladder icon
                     const ladderIcon = document.createElement('i');
                     ladderIcon.className = 'fas fa-ladder';
                     cell.appendChild(ladderIcon);
-                } else if (warningCells.includes(i)) {
+                } else if (isWarningCell(i)) {
                     cell.classList.add('warning');
-                    // Add warning icon
                     const warningIcon = document.createElement('i');
                     warningIcon.className = 'fas fa-exclamation';
                     cell.appendChild(warningIcon);
@@ -1904,297 +1581,41 @@
             }
 
             updatePieces();
-        }
-
-        function rollDice() {
-            const dice = document.getElementById('dice');
-            const rollBtn = document.getElementById('roll-btn');
-
-            // Disable button during animation
-            rollBtn.disabled = true;
-            dice.classList.add('rolling');
-
-            // Simple dice animation
-            let rolls = 0;
-            const maxRolls = 10;
-            const rollInterval = setInterval(function() {
-                dice.textContent = Math.floor(Math.random() * 6) + 1;
-                rolls++;
-
-                if (rolls >= maxRolls) {
-                    clearInterval(rollInterval);
-                    const diceValue = Math.floor(Math.random() * 6) + 1;
-                    dice.textContent = diceValue;
-                    dice.classList.remove('rolling');
-                    movePlayer(diceValue);
-                }
-            }, 100);
-        }
-
-        function movePlayer(steps) {
-            const player = players[currentPlayer];
-            const rollBtn = document.getElementById('roll-btn');
-            rollBtn.disabled = true;
-
-            let currentStep = 0;
-            const targetPosition = positions[player.name] + steps;
-            
-            const animationInterval = setInterval(function() {
-                if (currentStep < steps) {
-                    positions[player.name]++;
-                    currentStep++;
-                    updatePieces();
-                    updateScoreboard();
-                } else {
-                    clearInterval(animationInterval);
-                    
-                    // Check win condition
-                    if (positions[player.name] >= 100) {
-                        positions[player.name] = 100;
-                        updatePieces();
-                        updateScoreboard();
-                        showWinner(player);
-                        return;
-                    }
-
-                    // Check snakes/ladders after animation
-                    handleSnakesAndLadders(player);
-                }
-            }, 300);
-        }
-
-        function handleSnakesAndLadders(player) {
-            const currentPos = positions[player.name];
-            
-            // Check snakes
-            if (snakes[currentPos]) {
-                const targetPos = snakes[currentPos];
-                const snakeAnimation = setInterval(function() {
-                    if (positions[player.name] > targetPos) {
-                        positions[player.name]--;
-                        updatePieces();
-                        updateScoreboard();
-                    } else {
-                        clearInterval(snakeAnimation);
-                        checkTruthDare();
-                    }
-                }, 200);
-            } 
-            // Check ladders
-            else if (ladders[currentPos]) {
-                const targetPos = ladders[currentPos];
-                const ladderAnimation = setInterval(function() {
-                    if (positions[player.name] < targetPos) {
-                        positions[player.name]++;
-                        updatePieces();
-                        updateScoreboard();
-                    } else {
-                        clearInterval(ladderAnimation);
-                        checkTruthDare();
-                    }
-                }, 200);
-            } else {
-                checkTruthDare();
-            }
-        }
-
-        function checkTruthDare() {
-            const player = players[currentPlayer];
-            const rollBtn = document.getElementById('roll-btn');
-            
-            if (warningCells.includes(positions[player.name])) {
-                document.getElementById('truth-dare-modal').style.display = 'flex';
-            } else {
-                nextPlayer();
-            }
-            rollBtn.disabled = false;
-        }
-
-        function showTask(type) {
-            const taskResult = document.getElementById('task-result');
-            let taskText = '';
-            const currentPos = positions[players[currentPlayer].name];
-            
-            // Check if using custom tasks and has content for this cell
-            if (useCustomTasks && customTasks.cellTypes[currentPos]) {
-                const taskType = customTasks.cellTypes[currentPos];
-                taskText = customTasks[taskType][currentPos] || getRandomDefaultTask(taskType);
-            } else {
-                taskText = getRandomDefaultTask(type);
-            }
-            
-            taskResult.innerHTML = `
-                <div class="task-card">
-                    <h3>${type.toUpperCase()}</h3>
-                    <p>${taskText}</p>
-                </div>
-            `;
-            
-            document.getElementById('continue-btn').style.display = 'block';
-            document.getElementById('truth-btn').style.display = 'none';
-            document.getElementById('dare-btn').style.display = 'none';
-        }
-
-        function getRandomDefaultTask(type) {
-            const tasksArray = tasks[type];
-            return tasksArray[Math.floor(Math.random() * tasksArray.length)];
-        }
-
-        function updatePieces() {
-            // Clear all pieces
-            const pieces = document.querySelectorAll('.piece');
-            pieces.forEach(function(piece) {
-                piece.remove();
-            });
-
-            // Add pieces to new positions
-            for (const name in positions) {
-                const player = players.find(function(p) {
-                    return p.name === name;
-                });
-
-                if (player) {
-                    const position = positions[name];
-                    const cellIndex = 100 - position;
-                    const cells = document.querySelectorAll('#game-board .cell');
-                    
-                    if (cells[cellIndex]) {
-                        const piece = document.createElement('div');
-                        piece.className = 'piece';
-                        piece.style.backgroundColor = player.color;
-                        piece.textContent = player.number;
-                        piece.title = `${player.name} (Posisi: ${position})`;
-                        cells[cellIndex].appendChild(piece);
-                    }
-                }
-            }
-        }
-
-        function updateScoreboard() {
-            const scoreList = document.getElementById('score-list');
-            scoreList.innerHTML = '';
-
-            // Sort players by position
-            const sortedPlayers = [...players].sort(function(a, b) {
-                return positions[b.name] - positions[a.name];
-            });
-
-            // Create score items
-            sortedPlayers.forEach(function(player, index) {
-                const scoreItem = document.createElement('div');
-                scoreItem.className = 'score-item';
-
-                const playerRank = document.createElement('div');
-                playerRank.className = 'player-rank';
-
-                const playerColor = document.createElement('div');
-                playerColor.className = 'player-color';
-                playerColor.style.backgroundColor = player.color;
-
-                const playerName = document.createElement('span');
-                playerName.textContent = player.name;
-
-                const playerPosition = document.createElement('div');
-                playerPosition.className = 'player-position';
-                playerPosition.textContent = positions[player.name];
-
-                playerRank.appendChild(playerColor);
-                playerRank.appendChild(playerName);
-                scoreItem.appendChild(playerRank);
-                scoreItem.appendChild(playerPosition);
-                scoreList.appendChild(scoreItem);
-            });
-        }
-
-        function updateCurrentTurn() {
-            const player = players[currentPlayer];
-            const turnDisplay = document.getElementById('current-turn');
-            document.getElementById('turn-text').textContent = `Giliran: ${player.name}`;
-            turnDisplay.style.color = player.color;
-            document.querySelector('.current-turn-indicator').style.backgroundColor = player.color;
-        }
-
-        function nextPlayer() {
-            currentPlayer = (currentPlayer + 1) % players.length;
+            updateScoreboard();
             updateCurrentTurn();
+            initVoiceControl();
         }
 
-        function continueGame() {
-            document.getElementById('truth-dare-modal').style.display = 'none';
-            document.getElementById('task-result').innerHTML = '';
-            document.getElementById('continue-btn').style.display = 'none';
-            document.getElementById('truth-btn').style.display = 'inline-block';
-            document.getElementById('dare-btn').style.display = 'inline-block';
-
-            nextPlayer();
-        }
-
-        function showWinner(player) {
-            document.getElementById('winner-name').textContent = player.name;
-            document.getElementById('winner-name').style.color = player.color;
-            document.getElementById('winner-modal').style.display = 'flex';
-
-            // Stop voice recognition
-            if (recognition) {
-                recognition.stop();
-            }
-
-            // Create confetti
-            for (let i = 0; i < 100; i++) {
-                createConfetti();
-            }
-        }
-
-        function createConfetti() {
-            const confetti = document.createElement('div');
-            confetti.className = 'confetti';
-            confetti.style.left = Math.random() * 100 + 'vw';
-            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.width = (Math.random() * 10 + 5) + 'px';
-            confetti.style.height = (Math.random() * 10 + 5) + 'px';
-            confetti.style.animationDuration = (Math.random() * 2 + 1) + 's';
-            document.body.appendChild(confetti);
-
-            // Remove after animation
-            setTimeout(function() {
-                confetti.remove();
-            }, 3000);
-        }
-
-        function resetGame() {
-            document.getElementById('winner-modal').style.display = 'none';
-            
-            if (isOnlineGame) {
-                // In a real app, you would disconnect from the socket here
-                if (socket) {
-                    socket.close();
+        function isWarningCell(cellNumber) {
+            // Check if any player has placed a task on this cell
+            for (const playerName in customTasks) {
+                if (customTasks[playerName].some(task => task.cell === cellNumber)) {
+                    return true;
                 }
-                
-                // Reset online game state
-                isHost = false;
-                roomCode = '';
-                myPlayerId = '';
-                maxPlayers = 2;
-                
-                // Clear player lists
-                document.getElementById('host-player-list').innerHTML = '';
-                document.getElementById('guest-player-list').innerHTML = '';
-                
-                // Hide online status
-                document.getElementById('online-status').style.display = 'none';
-                
-                switchScreen('start-screen');
-            } else {
-                // For offline game
-                switchScreen('start-screen');
             }
+            return warningCells.includes(cellNumber);
         }
 
-        // Start the game when
-              // Start the game when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            initGame();
-        });
+        function getTaskForCell(cellNumber) {
+            // Check custom tasks first
+            for (const playerName in customTasks) {
+                const task = customTasks[playerName].find(t => t.cell === cellNumber);
+                if (task) return task;
+            }
+            
+            // Default to random task if no custom task
+            const type = Math.random() > 0.5 ? 'truth' : 'dare';
+            const tasksArray = tasks[type];
+            return {
+                type,
+                text: tasksArray[Math.floor(Math.random() * tasksArray.length)]
+            };
+        }
+
+        // ... (fungsi lainnya seperti rollDice, movePlayer, dll tetap sama)
+
+        // Start the game when page loads
+        document.addEventListener('DOMContentLoaded', initGame);
     </script>
 </body>
 </html>
