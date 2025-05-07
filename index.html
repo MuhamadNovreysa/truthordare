@@ -1725,6 +1725,51 @@
             // Start voice control
             initVoiceControl();
         }
+        // === GAME FUNCTIONS ===
+        function initGame() {
+            // Setup event listeners
+            document.getElementById('start-btn').onclick = function() {
+                switchScreen('mode-screen');
+            };
+
+            // Mode selection
+            document.getElementById('offline-mode').onclick = function() {
+                isOnlineGame = false;
+                switchScreen('rules-screen');
+            };
+
+            document.getElementById('online-mode').onclick = function() {
+                isOnlineGame = true;
+                switchScreen('online-options-screen');
+            };
+
+            // Task mode selection
+            document.getElementById('system-mode').onclick = function() {
+                document.getElementById('system-mode').classList.add('selected');
+                document.getElementById('manual-mode').classList.remove('selected');
+                taskMode = 'system';
+            };
+
+            document.getElementById('manual-mode').onclick = function() {
+                document.getElementById('manual-mode').classList.add('selected');
+                document.getElementById('system-mode').classList.remove('selected');
+                taskMode = 'manual';
+            };
+
+            document.getElementById('task-mode-confirm').onclick = function() {
+                if (!taskMode) {
+                    alert('Pilih mode tantangan terlebih dahulu');
+                    return;
+                }
+
+                if (taskMode === 'system') {
+                    // Skip custom task setup, go directly to game
+                    startGame();
+                } else {
+                    // Setup custom tasks
+                    setupCustomTasks();
+                }
+            };
 
         // === CUSTOM TASK FUNCTIONS ===
         function setupCustomTasks() {
@@ -1887,51 +1932,7 @@
             }
         }
 
-        // === GAME FUNCTIONS ===
-        function initGame() {
-            // Setup event listeners
-            document.getElementById('start-btn').onclick = function() {
-                switchScreen('mode-screen');
-            };
-
-            // Mode selection
-            document.getElementById('offline-mode').onclick = function() {
-                isOnlineGame = false;
-                switchScreen('rules-screen');
-            };
-
-            document.getElementById('online-mode').onclick = function() {
-                isOnlineGame = true;
-                switchScreen('online-options-screen');
-            };
-
-            // Task mode selection
-            document.getElementById('system-mode').onclick = function() {
-                document.getElementById('system-mode').classList.add('selected');
-                document.getElementById('manual-mode').classList.remove('selected');
-                taskMode = 'system';
-            };
-
-            document.getElementById('manual-mode').onclick = function() {
-                document.getElementById('manual-mode').classList.add('selected');
-                document.getElementById('system-mode').classList.remove('selected');
-                taskMode = 'manual';
-            };
-
-            document.getElementById('task-mode-confirm').onclick = function() {
-                if (!taskMode) {
-                    alert('Pilih mode tantangan terlebih dahulu');
-                    return;
-                }
-
-                if (taskMode === 'system') {
-                    // Skip custom task setup, go directly to game
-                    startGame();
-                } else {
-                    // Setup custom tasks
-                    setupCustomTasks();
-                }
-            };
+        
 
             // Custom task functions
             document.getElementById('add-task-btn').onclick = addCustomTask;
