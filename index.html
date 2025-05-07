@@ -1659,7 +1659,7 @@ function startGame() {
         });
     }).then(() => {
         console.log("Game started successfully!");
-        switchScreen('online-rules-screen');  // Tambahkan redirect
+        switchScreen('game-screen');  // Tambahkan redirect
         return Promise.resolve();  // Untuk chaining
     }).catch(error => {
         console.error("Gagal mulai game:", error);
@@ -1711,12 +1711,18 @@ function updateGameUI(roomData) {
     if (isHost) {
         const startBtn = document.getElementById('host-start-btn');
         const readyPlayers = Object.values(playersData).filter(p => p.ready).length;
-        startBtn.disabled = readyPlayers < 2 || roomData.status !== "waiting";
-
-        console.log("Ready Players:", readyPlayers, "Room Status:", roomData.status);
-
+        const totalPlayers = Object.keys(playersData).length;
+        
+        // Hanya aktifkan jika:
+        // 1. Status masih waiting
+        // 2. Ada minimal 2 pemain
+        // 3. Jumlah pemain ready >= minimal 2 atau semua pemain ready
+        startBtn.disabled = !(roomData.status === "waiting" && 
+                             totalPlayers >= 2 && 
+                             readyPlayers >= 2);
     }
 }
+    
 
 function onPlayerJoined(player) {
     console.log('Player joined:', player.name);
@@ -1743,7 +1749,8 @@ function onPlayerUpdated(player) {
     }
 }
 
-function onGameStarted() {
+
+            function onGameStarted() {
     console.log('Game started!');
     
     roomRef.once('value').then(snapshot => {
@@ -1777,11 +1784,18 @@ function onGameStarted() {
         document.getElementById('online-status').style.display = 'block';
         document.getElementById('room-code-badge').textContent = "Room: " + roomCode;
         
-        // Switch to game screen
-        switchScreen('game-screen');
+        // Untuk host, langsung ke game screen
+        if (isHost) {
+            switchScreen('game-screen');
+        } 
+        // Untuk guest, ke rules screen dulu
+        else {
+            switchScreen('online-rules-screen');
+        }
+        
         initVoiceControl();
     });
-}
+            }
 
 // === GAME FUNCTIONS ===
 function initGame() {
@@ -1912,21 +1926,41 @@ function initGame() {
 
     // Host starts the game
 document.getElementById('host-start-btn').onclick = function() {
-    console.log("Tombol mulai diklik!"); // Debug 1: Cek klik terdeteksi
+    console.log("Tombol mulai diklik!");
     
-    if (taskMode === 'system') {
-        startGame().then(() => {
-            console.log("Redirect ke online-rules-screen..."); // Debug 2: Cek berhasil redirect
-            switchScreen('online-rules-screen');
-        }).catch(error => {
-            console.error("Error:", error); // Debug 3: Cek error detail
-            alert('Gagal memulai game: ' + error);
-        });
-    } else {
-        startGameWithCustomTasks().then(() => {
-            console.log("Redirect ke online-rules-screen (custom tasks)...");
-            switchScreen('online-rules-screen');
-        });
+    // Periksa apakah game sudah dimulai
+    roomRef.child('status').once('value').then(snapshot => {
+        const status = snapshot.val();
+        if (status === "waiting") {
+            if (taskMode === 'system') {
+                startGame().then(() => {
+                    console.log("Game dimulai!");
+                }).catch(error => {
+                    console.error("Error:", error);
+                    alert('Gagal memulai game: ' + error);
+                });
+            } else {
+                startGameWithCustomTasks().then(() => {
+                    console.log("Game dengan custom tasks dimulai!");
+                });
+            }
+        } else {
+            console.log("Game sudah berjalan");
+        }
+    });
+};
+
+    // 2. Ini untuk GUEST konfirmasi ready (tambahkan INI SAJA)
+document.getElementById('online-start-btn').onclick = function() {
+    if (!isHost && roomRef && myPlayerId) {
+        roomRef.child('players/' + myPlayerId + '/ready').set(true)
+            .then(() => {
+                switchScreen('game-screen');
+                initVoiceControl();
+            })
+            .catch(error => {
+                alert("Error: " + error.message);
+            });
     }
 };
 
