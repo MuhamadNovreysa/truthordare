@@ -1299,6 +1299,11 @@
                         <!-- Player list will be populated here -->
                     </div>
                 </div>
+                <!-- TOMBOL READY BARU DITAMBAHKAN DI SINI -->
+        <button id="guest-ready-btn" class="btn">
+            <i class="fas fa-check mr-1"></i> Saya Sudah Siap
+        </button>
+
                 
                 <p class="text-center">Menunggu admin memulai game...</p>
             </div>
@@ -1644,29 +1649,38 @@ function movePlayer(steps) {
         return player;
     });
 }
-
 function startGame() {
     if (!roomCode) return Promise.reject("No room code");
     
     return roomRef.child('players').once('value').then(snapshot => {
-        const players = snapshot.val();
-        const firstPlayerId = Object.keys(players)[0];
+        const playersData = snapshot.val();
+        const firstPlayerId = Object.keys(playersData)[0];
         
+        // Cek apakah semua pemain ready
+        const allReady = Object.values(playersData).every(player => player.ready);
+        if (!allReady) {
+            throw new Error("Masih ada pemain yang belum ready!");
+        }
+
         return roomRef.update({
             status: "playing",
-            currentPlayer: firstPlayerId,  // Tetap set player pertama
+            currentPlayer: firstPlayerId,
             startedAt: firebase.database.ServerValue.TIMESTAMP
         });
     }).then(() => {
         console.log("Game started successfully!");
-        switchScreen('game-screen');  // Tambahkan redirect
-        return Promise.resolve();  // Untuk chaining
+        // Untuk host
+        switchScreen('game-screen');
+        
+        // Untuk guest, redirect akan dihandle oleh onGameStarted()
+        return Promise.resolve();
     }).catch(error => {
         console.error("Gagal mulai game:", error);
         alert("Error: " + error.message);
         return Promise.reject(error);
     });
 }
+
 
 function leaveRoom() {
     if (!roomCode || !myPlayerId) return Promise.resolve();
@@ -1702,24 +1716,25 @@ function updateGameUI(roomData) {
         
     playerList.innerHTML = '';
     
+    let readyCount = 0;
     Object.keys(playersData).forEach(id => {
         const player = playersData[id];
         addPlayerToList(player.name, id, id === roomData.host, player.ready);
+        if (player.ready) readyCount++;
     });
     
     // Update start button for host
     if (isHost) {
         const startBtn = document.getElementById('host-start-btn');
-        const readyPlayers = Object.values(playersData).filter(p => p.ready).length;
         const totalPlayers = Object.keys(playersData).length;
         
-        // Hanya aktifkan jika:
-        // 1. Status masih waiting
-        // 2. Ada minimal 2 pemain
-        // 3. Jumlah pemain ready >= minimal 2 atau semua pemain ready
+        // Enable start button if:
+        // 1. Game status is "waiting"
+        // 2. At least 2 players
+        // 3. All players are ready
         startBtn.disabled = !(roomData.status === "waiting" && 
                              totalPlayers >= 2 && 
-                             readyPlayers >= 2);
+                             readyCount === totalPlayers);
     }
 }
     
@@ -1749,53 +1764,44 @@ function onPlayerUpdated(player) {
     }
 }
 
-
-            function onGameStarted() {
+function onGameStarted() {
     console.log('Game started!');
     
     roomRef.once('value').then(snapshot => {
         const roomData = snapshot.val();
-        if (!roomData) return;
+        if (!roomData || roomData.status !== "playing") return;
         
-        // Initialize players
-        players = [];
-        positions = {};
+        // Initialize game state
+        players = Object.keys(roomData.players).map((id, index) => ({
+            name: roomData.players[id].name,
+            color: roomData.players[id].color,
+            number: index + 1,
+            id: id
+        }));
         
-        Object.keys(roomData.players).forEach((id, index) => {
-            const player = roomData.players[id];
-            players.push({
-                name: player.name,
-                color: player.color,
-                number: index + 1,
-                id: id
-            });
-            positions[player.name] = player.position;
-        });
-        
-        // Set current player
+        positions = Object.fromEntries(
+            Object.entries(roomData.players).map(([id, player]) => 
+                [player.name, player.position]
+            )
+        );
+
         currentPlayer = players.findIndex(p => p.id === roomData.currentPlayer);
         
-        // Initialize game board
         initBoard();
         updateScoreboard();
         updateCurrentTurn();
         
-        // Show online status
         document.getElementById('online-status').style.display = 'block';
         document.getElementById('room-code-badge').textContent = "Room: " + roomCode;
         
-        // Untuk host, langsung ke game screen
-        if (isHost) {
-            switchScreen('game-screen');
-        } 
-        // Untuk guest, ke rules screen dulu
-        else {
-            switchScreen('online-rules-screen');
-        }
-        
+        // Redirect SEMUA pemain ke game screen
+        switchScreen('game-screen');
         initVoiceControl();
+    }).catch(error => {
+        console.error("Error in onGameStarted:", error);
     });
-            }
+}
+             
 
 // === GAME FUNCTIONS ===
 function initGame() {
@@ -1861,6 +1867,8 @@ function initGame() {
         switchScreen('join-room-screen');
     };
 
+    
+
     // Create room
     document.getElementById('create-room-confirm').onclick = function() {
     const name = document.getElementById('host-name').value;
@@ -1923,6 +1931,19 @@ function initGame() {
             switchScreen('online-options-screen');
         });
     };
+// Di dalam fungsi initGame(), tambahkan:
+document.getElementById('guest-ready-btn').onclick = function() {
+    if (!isHost && roomRef && myPlayerId) {
+        roomRef.child('players/' + myPlayerId + '/ready').set(true)
+            .then(() => {
+                alert("Status Anda sudah siap! Menunggu host memulai game...");
+            })
+            .catch(error => {
+                alert("Error: " + error.message);
+            });
+    }
+};
+    
 
     // Host starts the game
 document.getElementById('host-start-btn').onclick = function() {
