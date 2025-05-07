@@ -2156,6 +2156,10 @@ function setupPlayerInputs() {
 }
 
 function startGame() {
+    positions = {};
+    players.forEach(player => {
+        positions[player.name] = 1; // Mulai dari kotak 1
+    });
     // Initialize board
     initBoard();
     updateScoreboard();
@@ -2251,28 +2255,23 @@ function movePlayer(steps) {
     const rollBtn = document.getElementById('roll-btn');
     rollBtn.disabled = true;
 
-    let currentStep = 0;
-    const targetPosition = positions[player.name] + steps;
+    let currentPosition = positions[player.name];
+    const targetPosition = Math.min(currentPosition + steps, 100); // Tidak boleh melebihi 100
     
-    const animationInterval = setInterval(function() {
-        if (currentStep < steps) {
-            positions[player.name]++;
-            currentStep++;
+    const moveInterval = setInterval(() => {
+        if (currentPosition < targetPosition) {
+            currentPosition++;
+            positions[player.name] = currentPosition;
             updatePieces();
             updateScoreboard();
         } else {
-            clearInterval(animationInterval);
+            clearInterval(moveInterval);
             
-            // Check win condition
-            if (positions[player.name] >= 100) {
-                positions[player.name] = 100;
-                updatePieces();
-                updateScoreboard();
+            if (currentPosition >= 100) {
                 showWinner(player);
                 return;
             }
-
-            // Check snakes/ladders after animation
+            
             handleSnakesAndLadders(player);
         }
     }, 300);
@@ -2352,29 +2351,32 @@ function checkTruthDare() {
 function updatePieces() {
     // Clear all pieces
     const pieces = document.querySelectorAll('.piece');
-    pieces.forEach(function(piece) {
-        piece.remove();
-    });
+    pieces.forEach(piece => piece.remove());
 
     // Add pieces to new positions
     for (const name in positions) {
-        const player = players.find(function(p) {
-            return p.name === name;
+        const player = players.find(p => p.name === name);
+        if (!player) continue;
+
+        const position = positions[name];
+        const cells = document.querySelectorAll('#game-board .cell');
+        
+        // Temukan indeks cell yang sesuai dengan posisi pion
+        let targetCellIndex = -1;
+        cells.forEach((cell, index) => {
+            const cellNumber = parseInt(cell.querySelector('.cell-number').textContent);
+            if (cellNumber === position) {
+                targetCellIndex = index;
+            }
         });
 
-        if (player) {
-            const position = positions[name];
-            const cellIndex = 100 - position;
-            const cells = document.querySelectorAll('#game-board .cell');
-            
-            if (cells[cellIndex]) {
-                const piece = document.createElement('div');
-                piece.className = 'piece';
-                piece.style.backgroundColor = player.color;
-                piece.textContent = player.number;
-                piece.title = `${player.name} (Posisi: ${position})`;
-                cells[cellIndex].appendChild(piece);
-            }
+        if (targetCellIndex !== -1 && cells[targetCellIndex]) {
+            const piece = document.createElement('div');
+            piece.className = 'piece';
+            piece.style.backgroundColor = player.color;
+            piece.textContent = player.number;
+            piece.title = `${player.name} (Posisi: ${position})`;
+            cells[targetCellIndex].appendChild(piece);
         }
     }
 }
