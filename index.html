@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ular Tangga Truth or Dare (Online & Offline)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Righteous&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-dark: #564FD8;
+            --secondary: #FF6584;
+            --dark: #2D3748;
+            --light: #F7FAFC;
+            --success: #48BB78;
+            --danger: #F56565;
+            --warning: #F6AD55;
+            --gray: #A0AEC0;
+            --dark-gray: #4A5568;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* === SCREEN STYLES === */
+        .screen {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.5s;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* === HEADER STYLES === */
+        .game-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-title {
+            font-family: 'Righteous', cursive;
+            font-size: 3rem;
+            color: var(--primary);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .game-subtitle {
+            font-size: 1rem;
+            color: var(--dark-gray);
+            font-weight: 400;
+        }
+
+        /* === BUTTON STYLES === */
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #e64c6d;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+        }
+
+        /* === CARD STYLES === */
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin: 1rem 0;
+            width: 100%;
+            max-width: 800px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* === PLAYER INPUT === */
+        .player-input-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 2rem 0;
+            width: 100%;
+        }
+
+        .player-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .color-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .color-preview:hover {
+            transform: scale(1.1);
+        }
+
+        .player-input input {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .player-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+        }
+
+        /* === GAME BOARD === */
+        .board-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin: 2rem auto;
+            perspective: 1000px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 4px;
+            width: 100%;
+            background-color: white;
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transform-style: preserve-3d;
+            transform: rotateX(5deg);
+            position: relative;
+            z-index: 1;
+        }
+
+        .board::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 5%;
+            width: 90%;
+            height: 20px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 50%;
+            filter: blur(10px);
+            z-index: -1;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            position: relative;
+            border-radius: 8px;
+            background-color: #f8fafc;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            z-index: 5;
+        }
+
+        .cell.snake {
+            background: linear-gradient(135deg, var(--danger), #fc8181);
+            color: white;
+        }
+
+        .cell.ladder {
+            background: linear-gradient(135deg, var(--success), #68d391);
+            color: white;
+        }
+
+        .cell.warning {
+            background: linear-gradient(135deg, var(--warning), #f6ad55);
+            color: white;
+        }
+
+        .cell-number {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.7rem;
+            color: var(--dark-gray);
+        }
+
+        .piece {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            position: absolute;
+            border: 2px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* === SCOREBOARD === */
+        .scoreboard {
+            background-color: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem auto;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scoreboard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .scoreboard h3 {
+            margin-bottom: 1rem;
+            color: var(--dark);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .scoreboard h3::before {
+            content: '🏆';
+            margin-right: 10px;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+        }
+
+        .score-item:last-child {
+            border-bottom: none;
+        }
+
+        .player-rank {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .player-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .player-position {
+            background-color: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* === CONTROLS === */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 2rem 0;
+        }
+
+        .dice-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            perspective: 1000px;
+        }
+
+        .dice {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .dice::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 16px;
+            box-shadow: inset 0 0 0 2px rgba(0,0,0,0.1);
+            pointer-events: none;
+        }
+
+        .dice.rolling {
+            animation: rollDice 0.5s ease-in-out infinite;
+        }
+
+        @keyframes rollDice {
+            0%, 100% { transform: rotateX(0) rotateY(0); }
+            25% { transform: rotateX(90deg) rotateY(0); }
+            50% { transform: rotateX(180deg) rotateY(90deg); }
+            75% { transform: rotateX(0) rotateY(180deg); }
+        }
+
+        /* === CURRENT TURN === */
+        .current-turn {
+            font-weight: 700;
+            text-align: center;
+            margin: 1rem 0;
+            padding: 12px 20px;
+            background-color: white;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .current-turn-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* === VOICE CONTROL === */
+        .voice-control {
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .mic-status {
+            font-size: 0.9rem;
+            color: var(--dark-gray);
+            margin-top: 0.5rem;
+        }
+
+        .mic-btn {
+            background-color: var(--primary);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(108, 99, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mic-btn::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mic-btn:hover::before {
+            opacity: 1;
+        }
+
+        .mic-btn i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .mic-btn.active {
+            background-color: var(--success);
+            box-shadow: 0 6px 12px rgba(72, 187, 120, 0.3);
+            animation: pulse 1.5s infinite;
+        }
+
+        .mic-btn.error {
+            background-color: var(--danger);
+            box-shadow: 0 6px 12px rgba(245, 101, 101, 0.3);
+        }
+
+        /* === MODAL === */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            transform: scale(0.9);
+            opacity: 0;
+            animation: modalOpen 0.3s ease forwards;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        @keyframes modalOpen {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+
+        .task-card {
+            background: linear-gradient(135deg, #f6f9fc 0%, #eef2f5 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 5px solid var(--primary);
+            text-align: left;
+        }
+
+        .task-card h3 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .task-card p {
+            color: var(--dark);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* === WINNER ANIMATION === */
+        .confetti {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            opacity: 0;
+            z-index: 999;
+            animation: confetti 3s ease-out;
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg) scale(0.5); opacity: 0; }
+        }
+
+        .winner-glow {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(108, 99, 255, 0.4) 0%, rgba(108, 99, 255, 0) 70%);
+            border-radius: 50%;
+            animation: glowPulse 2s infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes glowPulse {
+            from { transform: scale(0.8); opacity: 0.6; }
+            to { transform: scale(1.2); opacity: 0.9; }
+        }
+
+        /* === ONLINE GAME STYLES === */
+        .mode-select {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .mode-card {
+            background-color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 280px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .mode-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .mode-card i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .mode-card h3 {
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .mode-card p {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .room-code {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: var(--primary);
+            margin: 1rem 0;
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .room-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 1.5rem 0;
+        }
+
+        .room-option {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .room-option label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark-gray);
+        }
+
+        .room-option input, .room-option select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .room-option input:focus, .room-option select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .lobby {
+            width: 100%;
+            max-width: 500px;
+            margin: 1rem auto;
+        }
+
+        .player-list {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+        }
+
+        .player-item:last-child {
+            border-bottom: none;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .player-status {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background-color: #e2e8f0;
+            color: var(--dark-gray);
+        }
+
+        .player-status.ready {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .player-status.admin {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* === CUSTOM TASKS STYLES === */
+        .task-inputs {
+            margin: 1rem 0;
+            width: 100%;
+        }
+
+        .task-input-group {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .task-input-group h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .task-input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .task-input-group input, .task-input-group select {
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-left: 10px;
+        }
+
+        .task-type-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 1rem 0;
+        }
+
+        .task-type-selector .btn-outline.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* === RESPONSIVE DESIGN === */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .player-input-container {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .board {
+                grid-template-columns: repeat(10, 1fr);
+                gap: 2px;
+                padding: 10px;
+            }
+            
+            .cell {
+                font-size: 10px;
+            }
+            
+            .piece {
+                width: 18px;
+                height: 18px;
+                font-size: 0.6rem;
+            }
+            
+            .dice-container {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .dice {
+                font-size: 1.5rem;
+            }
+
+            .mode-select {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .mode-card {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-title {
+                font-size: 1.8rem;
+            }
+            
+            .player-input-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+            }
+            
+            .modal-content {
+                padding: 1.5rem;
+            }
+        }
+
+        /* === UTILITY CLASSES === */
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mt-4 { margin-top: 2rem; }
+
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        .mb-4 { margin-bottom: 2rem; }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- SCREEN 1: START MENU -->
+        <div class="screen active" id="start-screen">
+            <div class="game-header">
+                <h1 class="game-title">Ular Tangga</h1>
+                <h2 class="game-subtitle">Truth or Dare</h2>
+                <h2 class="game-subtitle">Powered By HIMABIDA</h2>
+            </div>
+            <div class="card">
+                <img src="ular.jpeg" alt="Game Illustration" style="width: 100%; max-width: 300px; margin: 0 auto 1rem; display: block;">
+                <button id="start-btn" class="btn btn-secondary">
+                    <i class="fas fa-play mr-1"></i> Mulai Game
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: MODE SELECTION -->
+        <div class="screen" id="mode-screen">
+            <div class="card">
+                <h1 class="text-center">Pilih Mode Permainan</h1>
+                <p class="text-center">Main sendiri atau bersama teman secara online?</p>
+                
+                <div class="mode-select">
+                    <div class="mode-card" id="offline-mode">
+                        <i class="fas fa-user-friends"></i>
+                        <h3>Offline</h3>
+                        <p>Main sendiri dengan teman-teman di satu perangkat</p>
+                    </div>
+                    <div class="mode-card" id="online-mode">
+                        <i class="fas fa-globe"></i>
+                        <h3>Online</h3>
+                        <p>Main bersama teman secara online dari jarak jauh</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: RULES (OFFLINE) -->
+        <div class="screen" id="rules-screen">
+            <div class="card">
+                <h1 class="text-center">Aturan Main</h1>
+                <div class="rules-list">
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-users"></i></div>
+                        <p>Pilih jumlah pemain (2-8 orang)</p>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-palette"></i></div>
+                        <p>Setiap pemain akan dapat pion warna berbeda</p>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-microphone"></i></div>
+                        <p><strong>Bilang "MULAI" untuk lempar dadu</strong> (atau klik tombol)</p>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-snake"></i></div>
+                        <p>Jika mendarat di:</p>
+                        <ul>
+                            <li><span style="color: var(--success);">Tangga (Hijau)</span>: Naik ke posisi spesifik</li>
+                            <li><span style="color: var(--danger);">Ular (Merah)</span>: Turun ke posisi spesifik</li>
+                            <li><span style="color: var(--warning);">Truth/Dare (Kuning)</span>: Pilih tantangan!</li>
+                        </ul>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-trophy"></i></div>
+                        <p>Pemain pertama yang sampai di kotak 100 menang!</p>
+                    </div>
+                </div>
+                <button id="next-btn" class="btn">
+                    Selanjutnya <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: PLAYER COUNT (OFFLINE) -->
+        <div class="screen" id="count-screen">
+            <div class="card">
+                <h1 class="text-center">Jumlah Pemain</h1>
+                <p class="text-center">Pilih jumlah pemain:</p>
+                <div class="player-count-buttons">
+                    <button class="count-btn btn btn-outline" data-count="2">
+                        <i class="fas fa-user-friends mr-1"></i> 2 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="3">
+                        <i class="fas fa-users mr-1"></i> 3 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="4">
+                        <i class="fas fa-users mr-1"></i> 4 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="5">
+                        <i class="fas fa-users mr-1"></i> 5 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="6">
+                        <i class="fas fa-users mr-1"></i> 6 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="7">
+                        <i class="fas fa-users mr-1"></i> 7 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="8">
+                        <i class="fas fa-users mr-1"></i> 8 Pemain
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 5: PLAYER NAMES (OFFLINE) -->
+        <div class="screen" id="names-screen">
+            <div class="card">
+                <h1 class="text-center">Input Nama Pemain</h1>
+                <div id="player-inputs" class="player-input-container"></div>
+                <button id="start-game-btn" class="btn">
+                    <i class="fas fa-gamepad mr-1"></i> Mulai Bermain
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 6: CUSTOM TASKS (OFFLINE/ONLINE) -->
+        <div class="screen" id="custom-tasks-screen">
+            <div class="card">
+                <h1 class="text-center">Custom Truth/Dare</h1>
+                <p class="text-center">Pilih tipe tantangan dan masukkan teksnya:</p>
+                
+                <div class="task-type-selector">
+                    <button class="btn btn-outline active" data-type="system">
+                        <i class="fas fa-robot"></i> System Default
+                    </button>
+                    <button class="btn btn-outline" data-type="manual">
+                        <i class="fas fa-edit"></i> Custom Manual
+                    </button>
+                </div>
+
+                <div id="custom-tasks-container" style="display: none;">
+                    <div class="task-inputs">
+                        <!-- Will be filled by JavaScript -->
+                    </div>
+                    <button id="save-tasks-btn" class="btn">
+                        <i class="fas fa-save"></i> Simpan Tantangan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 7: ONLINE MODE SELECTION -->
+        <div class="screen" id="online-options-screen">
+            <div class="card">
+                <h1 class="text-center">Mode Online</h1>
+                <p class="text-center">Buat room baru atau gabung room yang sudah ada</p>
+                
+                <div class="mode-select">
+                    <div class="mode-card" id="create-room-btn">
+                        <i class="fas fa-plus-circle"></i>
+                        <h3>Buat Room</h3>
+                        <p>Buat room baru dan undang teman untuk bergabung</p>
+                    </div>
+                    <div class="mode-card" id="join-room-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <h3>Gabung Room</h3>
+                        <p>Gabung ke room yang sudah ada dengan kode room</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 8: CREATE ROOM -->
+        <div class="screen" id="create-room-screen">
+            <div class="card">
+                <h1 class="text-center">Buat Room Baru</h1>
+                
+                <div class="room-options">
+                    <div class="room-option">
+                        <label for="player-name">Nama Anda</label>
+                        <input type="text" id="host-name" placeholder="Masukkan nama Anda">
+                    </div>
+                    <div class="room-option">
+                        <label for="max-players">Jumlah Pemain</label>
+                        <select id="max-players">
+                            <option value="2">2 Pemain</option>
+                            <option value="3">3 Pemain</option>
+                            <option value="4">4 Pemain</option>
+                            <option value="5">5 Pemain</option>
+                            <option value="6">6 Pemain</option>
+                            <option value="7">7 Pemain</option>
+                            <option value="8">8 Pemain</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button id="create-room-confirm" class="btn">
+                    <i class="fas fa-plus-circle mr-1"></i> Buat Room
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 9: ROOM LOBBY (HOST) -->
+        <div class="screen" id="host-lobby-screen">
+            <div class="card">
+                <h1 class="text-center">Room Anda</h1>
+                <p class="text-center">Bagikan kode ini ke teman Anda:</p>
+                <div class="room-code" id="room-code-display">ABCD12</div>
+                
+                <div class="lobby">
+                    <h3><i class="fas fa-users mr-1"></i> Pemain di Room</h3>
+                    <div class="player-list" id="host-player-list">
+                        <!-- Player list will be populated here -->
+                    </div>
+                </div>
+                
+                <p class="text-center">Menunggu pemain lain bergabung...</p>
+                <button id="host-start-btn" class="btn" disabled>
+                    <i class="fas fa-play mr-1"></i> Mulai Game
+                </button>
+            </div>
+
+                  <!-- SCREEN 10: JOIN ROOM -->
+        <div class="screen" id="join-room-screen">
+            <div class="card">
+                <h1 class="text-center">Gabung Room</h1>
+                
+                <div class="room-options">
+                    <div class="room-option">
+                        <label for="join-player-name">Nama Anda</label>
+                        <input type="text" id="join-player-name" placeholder="Masukkan nama Anda">
+                    </div>
+                    <div class="room-option">
+                        <label for="room-code">Kode Room</label>
+                        <input type="text" id="room-code" placeholder="Masukkan kode room">
+                    </div>
+                </div>
+                
+                <button id="join-room-confirm" class="btn">
+                    <i class="fas fa-sign-in-alt mr-1"></i> Gabung Room
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 11: ROOM LOBBY (GUEST) -->
+        <div class="screen" id="guest-lobby-screen">
+            <div class="card">
+                <h1 class="text-center">Room</h1>
+                <p class="text-center">Kode Room: <span class="room-code" id="guest-room-code">ABCD12</span></p>
+                
+                <div class="lobby">
+                    <h3><i class="fas fa-users mr-1"></i> Pemain di Room</h3>
+                    <div class="player-list" id="guest-player-list">
+                        <!-- Player list will be populated here -->
+                    </div>
+                </div>
+                
+                <p class="text-center">Menunggu admin memulai game...</p>
+            </div>
+        </div>
+
+        <!-- SCREEN 12: ONLINE RULES -->
+        <div class="screen" id="online-rules-screen">
+            <div class="card">
+                <h1 class="text-center">Aturan Main</h1>
+                <div class="rules-list">
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-users"></i></div>
+                        <p>Game akan berjalan secara bergiliran</p>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-palette"></i></div>
+                        <p>Setiap pemain akan dapat pion warna berbeda</p>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-microphone"></i></div>
+                        <p><strong>Bilang "MULAI" untuk lempar dadu</strong> (atau klik tombol)</p>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-snake"></i></div>
+                        <p>Jika mendarat di:</p>
+                        <ul>
+                            <li><span style="color: var(--success);">Tangga (Hijau)</span>: Naik ke posisi spesifik</li>
+                            <li><span style="color: var(--danger);">Ular (Merah)</span>: Turun ke posisi spesifik</li>
+                            <li><span style="color: var(--warning);">Truth/Dare (Kuning)</span>: Pilih tantangan!</li>
+                        </ul>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-trophy"></i></div>
+                        <p>Pemain pertama yang sampai di kotak 100 menang!</p>
+                    </div>
+                </div>
+                <button id="online-start-btn" class="btn">
+                    <i class="fas fa-play mr-1"></i> Mulai Game
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 13: GAME BOARD (FOR BOTH OFFLINE AND ONLINE) -->
+        <div class="screen" id="game-screen">
+            <div class="game-header">
+                <h1 class="game-title">Ular Tangga</h1>
+                <h2 class="game-subtitle">Truth or Dare Edition</h2>
+                <div id="online-status" style="display: none;">
+                    <span id="room-code-badge" class="player-status admin"></span>
+                    <span id="connection-status" class="player-status ready"></span>
+                </div>
+            </div>
+            
+            <div class="scoreboard">
+                <h3><i class="fas fa-trophy mr-1"></i> Scoreboard</h3>
+                <div id="score-list"></div>
+            </div>
+            
+            <div class="board-container">
+                <div class="board" id="game-board"></div>
+            </div>
+            
+            <div class="current-turn" id="current-turn">
+                <div class="current-turn-indicator"></div>
+                <span id="turn-text">Giliran: Player 1</span>
+            </div>
+            
+            <div class="controls">
+                <button id="roll-btn" class="btn btn-secondary">
+                    <i class="fas fa-dice mr-1"></i> Lempar Dadu
+                </button>
+                <div class="dice-container">
+                    <div class="dice" id="dice">?</div>
+                </div>
+            </div>
+
+            <!-- VOICE CONTROL -->
+            <div class="voice-control">
+                <div class="mic-btn" id="mic-btn">
+                    <i class="fas fa-microphone"></i>
+                </div>
+                <p class="mic-status" id="mic-status">Klik mic atau bilang "MULAI"</p>
+            </div>
+        </div>
+
+        <!-- MODAL: TRUTH/DARE -->
+        <div class="modal" id="truth-dare-modal">
+            <div class="modal-content">
+                <div class="winner-glow"></div>
+                <h2>PILIH:</h2>
+                <div class="modal-buttons">
+                    <button id="truth-btn" class="btn">
+                        <i class="fas fa-comment-dots mr-1"></i> Truth
+                    </button>
+                    <button id="dare-btn" class="btn btn-secondary">
+                        <i class="fas fa-running mr-1"></i> Dare
+                    </button>
+                </div>
+                <div id="task-result"></div>
+                <button id="continue-btn" class="btn" style="display: none; margin-top: 1rem;">
+                    Lanjutkan <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL: WINNER -->
+        <div class="modal" id="winner-modal">
+            <div class="modal-content">
+                <div class="winner-glow"></div>
+                <h2><i class="fas fa-trophy mr-1"></i> Selamat!</h2>
+                <p id="winner-name" style="font-size: 2rem; font-weight: bold; margin: 1rem 0;"></p>
+                <button id="play-again-btn" class="btn btn-secondary">
+                    <i class="fas fa-redo mr-1"></i> Main Lagi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === GAME DATA ===
+        const colors = [
+            '#FF6584', // Merah muda
+            '#6C63FF', // Ungu
+            '#48BB78', // Hijau
+            '#F6AD55', // Oranye
+            '#9F7AEA', // Lavender
+            '#4299E1', // Biru
+            '#ED8936', // Jingga
+            '#667EEA'  // Biru ungu
+        ];
+
+        // Posisi ular & tangga
+        const snakes = {
+            57: 34, // Turun dari 57 ke 34
+            30: 21, // Turun dari 30 ke 21
+            87: 68, // Turun dari 87 ke 68
+            15: 5,  // Turun dari 15 ke 5
+            60: 40  // Turun dari 60 ke 40
+        };
+
+        const ladders = {
+            10: 24, // Naik dari 10 ke 24
+            75: 90, // Naik dari 75 ke 90
+            43: 53, // Naik dari 43 ke 53
+            38: 46, // Naik dari 38 ke 46
+            5: 17   // Naik dari 5 ke 17
+        };
+
+        const warningCells = [12, 22, 35, 48, 63, 77, 85, 95];
+
+        const tasks = {
+            truth: [
+                "Pernah naksir teman sendiri? Ceritakan!",
+                "Apa rahasia yang belum pernah kamu ceritakan ke siapapun?",
+                "Pernah nyontek saat ujian? Kapan terakhir kali?",
+                "Kalau bisa jadi binatang, mau jadi apa dan kenapa?",
+                "Apa hal paling memalukan yang pernah terjadi padamu?",
+                "Apa kebiasaan anehmu yang tidak diketahui orang lain?",
+                "Pernah berbohong ke orang tua tentang apa?",
+                "Apa hal paling bodoh yang pernah kamu lakukan?"
+            ],
+            dare: [
+                "Tirukan suara ayam selama 10 detik!",
+                "Minum air tanpa menggunakan tangan",
+                "Tari seperti bebek selama 30 detik",
+                "Panggil aku 'Yang Mulia' sampai giliranmu berikutnya",
+                "Tirukan gaya jalan model di catwalk",
+                "Nyanyi lagu anak kecil dengan suara keras",
+                "Biarkan orang sebelahmu menggambar di wajahmu",
+                "Ucapkan alfabet terbalik dari Z ke A"
+            ]
+        };
+
+        // Game state
+        let players = [];
+        let positions = {};
+        let currentPlayer = 0;
+        let playerCount = 0;
+        let recognition;
+        let isListening = false;
+        let isOnlineGame = false;
+        let isHost = false;
+        let roomCode = '';
+        let socket;
+        let myPlayerId = '';
+        let maxPlayers = 2;
+        let customTasks = {
+            truth: {},
+            dare: {},
+            cellTypes: {}
+        };
+        let useCustomTasks = false;
+
+        // === VOICE RECOGNITION ===
+        function initVoiceControl() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                document.getElementById('mic-btn').style.display = 'none';
+                document.getElementById('mic-status').textContent = "Browser tidak mendukung voice control!";
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'id-ID';
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = function() {
+                isListening = true;
+                document.getElementById('mic-btn').classList.add('active');
+                document.getElementById('mic-status').textContent = "Mendengarkan... (bilang 'MULAI')";
+            };
+
+            recognition.onend = function() {
+                isListening = false;
+                document.getElementById('mic-btn').classList.remove('active');
+                document.getElementById('mic-status').textContent = "Klik mic atau bilang 'MULAI'";
+                
+                // Auto-restart listening if game is active
+                if (document.getElementById('game-screen').classList.contains('active')) {
+                    setTimeout(() => {
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            console.error("Error restarting recognition:", e);
+                        }
+                    }, 500);
+                }
+            };
+
+            recognition.onresult = function(event) {
+                const last = event.results.length - 1;
+                const command = event.results[last][0].transcript.trim().toUpperCase();
+                
+                if (command.includes("MULAI")) {
+                    document.getElementById('mic-status').textContent = "Terdeteksi: " + command;
+                    rollDice();
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Error:', event.error);
+                let errorMsg = "Error: ";
+                const micBtn = document.getElementById('mic-btn');
+                
+                micBtn.classList.remove('active');
+                micBtn.classList.add('error');
+                
+                switch(event.error) {
+                    case 'not-allowed':
+                        errorMsg = "Izin mikrofon ditolak. Klik ikon mic untuk mengizinkan.";
+                        break;
+                    case 'no-speech':
+                        errorMsg = "Tidak terdeteksi suara. Coba lagi.";
+                        break;
+                    case 'audio-capture':
+                        errorMsg = "Tidak ada mikrofon yang terdeteksi.";
+                        break;
+                    default:
+                        errorMsg = "Error: " + event.error;
+                }
+                
+                document.getElementById('mic-status').textContent = errorMsg;
+            };
+
+            document.getElementById('mic-btn').onclick = function() {
+                try {
+                    if (isListening) {
+                        recognition.stop();
+                    } else {
+                        recognition.start();
+                    }
+                } catch (error) {
+                    document.getElementById('mic-status').textContent = "Error: " + error.message;
+                }
+            };
+        }
+
+        // === ONLINE GAME FUNCTIONS ===
+        function initSocketConnection() {
+            // In a real app, you would connect to your WebSocket server here
+            // For this example, we'll simulate the connection
+            
+            console.log("Connecting to WebSocket server...");
+            
+            // Simulate connection
+            setTimeout(() => {
+                myPlayerId = 'player-' + Math.random().toString(36).substr(2, 9);
+                
+                // Simulate socket connection
+                socket = {
+                    send: function(data) {
+                        console.log("Sending data:", data);
+                        // In a real app, this would send to the server
+                    },
+                    close: function() {
+                        console.log("Connection closed");
+                    }
+                };
+                
+                document.getElementById('connection-status').textContent = "Terhubung";
+                document.getElementById('connection-status').className = "player-status ready";
+                
+                if (isHost) {
+                    // Generate room code
+                    roomCode = generateRoomCode();
+                    document.getElementById('room-code-display').textContent = roomCode;
+                    document.getElementById('guest-room-code').textContent = roomCode;
+                    document.getElementById('room-code-badge').textContent = "Room: " + roomCode;
+                    
+                    // Add host to player list
+                    const hostName = document.getElementById('host-name').value;
+                    addPlayerToList(hostName, myPlayerId, true);
+                    
+                    // Enable start button when enough players join
+                    updateStartButton();
+                }
+            }, 1000);
+        }
+
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function addPlayerToList(name, id, isAdmin = false) {
+            const playerList = isHost ? 
+                document.getElementById('host-player-list') : 
+                document.getElementById('guest-player-list');
+                
+            const playerItem = document.createElement('div');
+            playerItem.className = 'player-item';
+            playerItem.id = 'player-' + id;
+            
+            const playerInfo = document.createElement('div');
+            playerInfo.className = 'player-info';
+            
+            const playerAvatar = document.createElement('div');
+            playerAvatar.className = 'player-avatar';
+            playerAvatar.textContent = name.charAt(0).toUpperCase();
+            playerAvatar.style.backgroundColor = colors[playerList.children.length % colors.length];
+            
+            const playerName = document.createElement('span');
+            playerName.textContent = name;
+            
+            const playerStatus = document.createElement('div');
+            playerStatus.className = 'player-status';
+            playerStatus.textContent = isAdmin ? 'Admin' : 'Player';
+            if (isAdmin) playerStatus.classList.add('admin');
+            
+            playerInfo.appendChild(playerAvatar);
+            playerInfo.appendChild(playerName);
+            playerItem.appendChild(playerInfo);
+            playerItem.appendChild(playerStatus);
+            playerList.appendChild(playerItem);
+            
+            if (isHost) {
+                updateStartButton();
+            }
+        }
+
+        function updateStartButton() {
+            if (!isHost) return;
+            
+            const playerCount = document.getElementById('host-player-list').children.length;
+            const startBtn = document.getElementById('host-start-btn');
+            
+            if (playerCount >= 2) {
+                startBtn.disabled = false;
+            } else {
+                startBtn.disabled = true;
+            }
+        }
+
+        function simulatePlayerJoin() {
+            // In a real app, this would be handled by the server
+            if (!isHost) return;
+            
+            const names = ['Budi', 'Ani', 'Citra', 'Dodi', 'Eka', 'Fajar', 'Gita', 'Hadi'];
+            const randomName = names[Math.floor(Math.random() * names.length)];
+            const randomId = 'player-' + Math.random().toString(36).substr(2, 9);
+            
+            setTimeout(() => {
+                addPlayerToList(randomName, randomId);
+                
+                // Simulate another player joining after some time
+                if (document.getElementById('host-player-list').children.length < maxPlayers) {
+                    simulatePlayerJoin();
+                }
+            }, 2000);
+        }
+
+        function startOnlineGame() {
+            // In a real app, this would notify all players via the server
+            console.log("Starting online game...");
+            
+            // Get players from the lobby
+            const playerItems = document.getElementById('host-player-list').children;
+            players = [];
+            
+            for (let i = 0; i < playerItems.length; i++) {
+                const playerName = playerItems[i].querySelector('.player-info span').textContent;
+                const playerColor = playerItems[i].querySelector('.player-avatar').style.backgroundColor;
+                
+                players.push({
+                    name: playerName,
+                    color: playerColor,
+                    number: i + 1,
+                    id: playerItems[i].id.replace('player-', '')
+                });
+                
+                positions[playerName] = 1;
+            }
+            
+            // Initialize game
+            initBoard();
+            updateScoreboard();
+            updateCurrentTurn();
+            
+            // Show online status
+            document.getElementById('online-status').style.display = 'block';
+            
+            // Switch to game screen
+            switchScreen('game-screen');
+            
+            // Start voice control
+            initVoiceControl();
+        }
+
+        // === CUSTOM TASKS FUNCTIONS ===
+        function showCustomTaskScreen() {
+            const container = document.getElementById('custom-tasks-container');
+            const taskInputs = document.querySelector('.task-inputs');
+            
+            if (useCustomTasks) {
+                container.style.display = 'block';
+                taskInputs.innerHTML = '';
+                
+                // Buat input untuk setiap warning cell
+                warningCells.forEach((cell, index) => {
+                    const group = document.createElement('div');
+                    group.className = 'task-input-group';
+                    
+                    group.innerHTML = `
+                        <h4>Kotak ${cell}</h4>
+                        <div>
+                            <label>Truth:</label>
+                            <textarea id="truth-${cell}" placeholder="Masukkan truth..."></textarea>
+                        </div>
+                        <div>
+                            <label>Dare:</label>
+                            <textarea id="dare-${cell}" placeholder="Masukkan dare..."></textarea>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <label>Gunakan: 
+                                <select id="type-${cell}">
+                                    <option value="truth">Truth</option>
+                                    <option value="dare">Dare</option>
+                                </select>
+                            </label>
+                        </div>
+                    `;
+                    
+                    taskInputs.appendChild(group);
+                });
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function saveCustomTasks() {
+            // Reset custom tasks
+            customTasks = {
+                truth: {},
+                dare: {},
+                cellTypes: {}
+            };
+            
+            let hasContent = false;
+            
+            warningCells.forEach(cell => {
+                const truthVal = document.getElementById(`truth-${cell}`).value.trim();
+                const dareVal = document.getElementById(`dare-${cell}`).value.trim();
+                const type = document.getElementById(`type-${cell}`).value;
+                
+                if (truthVal) {
+                    customTasks.truth[cell] = truthVal;
+                    hasContent = true;
+                }
+                if (dareVal) {
+                    customTasks.dare[cell] = dareVal;
+                    hasContent = true;
+                }
+                
+                // Tandai cell yang menggunakan custom task
+                if (type && (truthVal || dareVal)) {
+                    customTasks.cellTypes[cell] = type;
+                }
+            });
+            
+            // Validasi jika memilih manual tapi tidak mengisi apapun
+            if (useCustomTasks && !hasContent) {
+                alert('Anda memilih custom tasks tapi belum mengisi apapun!');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // === GAME FUNCTIONS ===
+        function initGame() {
+            // Setup event listeners
+            document.getElementById('start-btn').onclick = function() {
+                switchScreen('mode-screen');
+            };
+
+            // Mode selection
+            document.getElementById('offline-mode').onclick = function() {
+                isOnlineGame = false;
+                switchScreen('rules-screen');
+            };
+
+            document.getElementById('online-mode').onclick = function() {
+                isOnlineGame = true;
+                switchScreen('online-options-screen');
+            };
+
+            // Online game options
+            document.getElementById('create-room-btn').onclick = function() {
+                isHost = true;
+                switchScreen('create-room-screen');
+            };
+
+            document.getElementById('join-room-btn').onclick = function() {
+                isHost = false;
+                switchScreen('join-room-screen');
+            };
+
+            // Create room
+            document.getElementById('create-room-confirm').onclick = function() {
+                const name = document.getElementById('host-name').value;
+                maxPlayers = parseInt(document.getElementById('max-players').value);
+                
+                if (!name) {
+                    alert('Mohon masukkan nama Anda');
+                    return;
+                }
+                
+                initSocketConnection();
+                switchScreen('host-lobby-screen');
+                
+                // Simulate players joining (in a real app, this would happen via the server)
+                simulatePlayerJoin();
+            };
+
+            // Join room
+            document.getElementById('join-room-confirm').onclick = function() {
+                const name = document.getElementById('join-player-name').value;
+                const code = document.getElementById('room-code').value;
+                
+                if (!name || !code) {
+                    alert('Mohon masukkan nama dan kode room');
+                    return;
+                }
+                
+                initSocketConnection();
+                switchScreen('guest-lobby-screen');
+                
+                // Simulate being added to the game (in a real app, this would happen via the server)
+                setTimeout(() => {
+                    addPlayerToList(name, myPlayerId);
+                }, 1000);
+            };
+
+            // Host starts the game
+            document.getElementById('host-start-btn').onclick = function() {
+                switchScreen('custom-tasks-screen');
+            };
+
+            // Task type selector
+            document.querySelectorAll('.task-type-selector button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.task-type-selector button').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    useCustomTasks = this.dataset.type === 'manual';
+                    showCustomTaskScreen();
+                });
+            });
+
+            // Save custom tasks
+            document.getElementById('save-tasks-btn').addEventListener('click', function() {
+                if (saveCustomTasks()) {
+                    if (isOnlineGame && isHost) {
+                        startOnlineGame();
+                    } else {
+                        switchScreen('game-screen');
+                    }
+                }
+            });
+
+            // Start online game
+            document.getElementById('online-start-btn').onclick = function() {
+                startOnlineGame();
+            };
+
+            // Offline game flow
+            document.getElementById('next-btn').onclick = function() {
+                switchScreen('count-screen');
+            };
+
+            const countButtons = document.querySelectorAll('.count-btn');
+            countButtons.forEach(function(button) {
+                button.onclick = function() {
+                    playerCount = parseInt(this.getAttribute('data-count'));
+                    setupPlayerInputs();
+                    switchScreen('names-screen');
+                };
+            });
+
+            document.getElementById('start-game-btn').onclick = function() {
+                startGame();
+            };
+
+            document.getElementById('roll-btn').onclick = function() {
+                rollDice();
+            };
+
+            document.getElementById('truth-btn').onclick = function() {
+                showTask('truth');
+            };
+
+            document.getElementById('dare-btn').onclick = function() {
+                showTask('dare');
+            };
+
+            document.getElementById('continue-btn').onclick = function() {
+                continueGame();
+            };
+
+            document.getElementById('play-again-btn').onclick = function() {
+                resetGame();
+            };
+
+            // Start with first screen
+            switchScreen('start-screen');
+        }
+
+        function switchScreen(screenId) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(function(screen) {
+                if (screen.id === screenId) {
+                    screen.classList.add('active');
+                    
+                    // Initialize voice control when game screen appears
+                    if (screenId === 'game-screen') {
+                        initVoiceControl();
+                    }
+                } else {
+                    screen.classList.remove('active');
+                }
+            });
+        }
+
+        function setupPlayerInputs() {
+            const container = document.getElementById('player-inputs');
+            container.innerHTML = '';
+
+            for (let i = 0; i < playerCount; i++) {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'player-input';
+
+                const colorDiv = document.createElement('div');
+                colorDiv.className = 'color-preview';
+                colorDiv.style.backgroundColor = colors[i];
+                colorDiv.textContent = i + 1;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Nama Pemain ' + (i + 1);
+                input.required = true;
+
+                playerDiv.appendChild(colorDiv);
+                playerDiv.appendChild(input);
+                container.appendChild(playerDiv);
+            }
+        }
+
+        function startGame() {
+            const inputs = document.querySelectorAll('#player-inputs input');
+            let allValid = true;
+
+            inputs.forEach(function(input) {
+                if (input.value.trim() === '') {
+                    allValid = false;
+                    input.style.borderColor = 'var(--danger)';
+                } else {
+                    input.style.borderColor = '#e2e8f0';
+                }
+            });
+
+            if (!allValid) {
+                alert('Mohon isi semua nama pemain!');
+                return;
+            }
+
+            // Initialize players
+            players = [];
+            positions = {};
+            currentPlayer = 0;
+
+            inputs.forEach(function(input, index) {
+                const player = {
+                    name: input.value.trim(),
+                    color: colors[index],
+                    number: index + 1
+                };
+                players.push(player);
+                positions[player.name] = 1;
+            });
+
+            // Show custom tasks screen
+            switchScreen('custom-tasks-screen');
+        }
+
+        function initBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+
+            // Create board from 100 to 1 (snakes and ladders pattern)
+            for (let i = 100; i >= 1; i--) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                
+                // Add cell number
+                const cellNumber = document.createElement('span');
+                cellNumber.className = 'cell-number';
+                cellNumber.textContent = i;
+                cell.appendChild(cellNumber);
+
+                if (snakes[i]) {
+                    cell.classList.add('snake');
+                    // Add snake icon
+                    const snakeIcon = document.createElement('i');
+                    snakeIcon.className = 'fas fa-snake';
+                    cell.appendChild(snakeIcon);
+                } else if (ladders[i]) {
+                    cell.classList.add('ladder');
+                    // Add ladder icon
+                    const ladderIcon = document.createElement('i');
+                    ladderIcon.className = 'fas fa-ladder';
+                    cell.appendChild(ladderIcon);
+                } else if (warningCells.includes(i)) {
+                    cell.classList.add('warning');
+                    // Add warning icon
+                    const warningIcon = document.createElement('i');
+                    warningIcon.className = 'fas fa-exclamation';
+                    cell.appendChild(warningIcon);
+                }
+
+                board.appendChild(cell);
+            }
+
+            updatePieces();
+        }
+
+        function rollDice() {
+            const dice = document.getElementById('dice');
+            const rollBtn = document.getElementById('roll-btn');
+
+            // Disable button during animation
+            rollBtn.disabled = true;
+            dice.classList.add('rolling');
+
+            // Simple dice animation
+            let rolls = 0;
+            const maxRolls = 10;
+            const rollInterval = setInterval(function() {
+                dice.textContent = Math.floor(Math.random() * 6) + 1;
+                rolls++;
+
+                if (rolls >= maxRolls) {
+                    clearInterval(rollInterval);
+                    const diceValue = Math.floor(Math.random() * 6) + 1;
+                    dice.textContent = diceValue;
+                    dice.classList.remove('rolling');
+                    movePlayer(diceValue);
+                }
+            }, 100);
+        }
+
+        function movePlayer(steps) {
+            const player = players[currentPlayer];
+            const rollBtn = document.getElementById('roll-btn');
+            rollBtn.disabled = true;
+
+            let currentStep = 0;
+            const targetPosition = positions[player.name] + steps;
+            
+            const animationInterval = setInterval(function() {
+                if (currentStep < steps) {
+                    positions[player.name]++;
+                    currentStep++;
+                    updatePieces();
+                    updateScoreboard();
+                } else {
+                    clearInterval(animationInterval);
+                    
+                    // Check win condition
+                    if (positions[player.name] >= 100) {
+                        positions[player.name] = 100;
+                        updatePieces();
+                        updateScoreboard();
+                        showWinner(player);
+                        return;
+                    }
+
+                    // Check snakes/ladders after animation
+                    handleSnakesAndLadders(player);
+                }
+            }, 300);
+        }
+
+        function handleSnakesAndLadders(player) {
+            const currentPos = positions[player.name];
+            
+            // Check snakes
+            if (snakes[currentPos]) {
+                const targetPos = snakes[currentPos];
+                const snakeAnimation = setInterval(function() {
+                    if (positions[player.name] > targetPos) {
+                        positions[player.name]--;
+                        updatePieces();
+                        updateScoreboard();
+                    } else {
+                        clearInterval(snakeAnimation);
+                        checkTruthDare();
+                    }
+                }, 200);
+            } 
+            // Check ladders
+            else if (ladders[currentPos]) {
+                const targetPos = ladders[currentPos];
+                const ladderAnimation = setInterval(function() {
+                    if (positions[player.name] < targetPos) {
+                        positions[player.name]++;
+                        updatePieces();
+                        updateScoreboard();
+                    } else {
+                        clearInterval(ladderAnimation);
+                        checkTruthDare();
+                    }
+                }, 200);
+            } else {
+                checkTruthDare();
+            }
+        }
+
+        function checkTruthDare() {
+            const player = players[currentPlayer];
+            const rollBtn = document.getElementById('roll-btn');
+            
+            if (warningCells.includes(positions[player.name])) {
+                document.getElementById('truth-dare-modal').style.display = 'flex';
+            } else {
+                nextPlayer();
+            }
+            rollBtn.disabled = false;
+        }
+
+        function showTask(type) {
+            const taskResult = document.getElementById('task-result');
+            let taskText = '';
+            const currentPos = positions[players[currentPlayer].name];
+            
+            // Check if using custom tasks and has content for this cell
+            if (useCustomTasks && customTasks.cellTypes[currentPos]) {
+                const taskType = customTasks.cellTypes[currentPos];
+                taskText = customTasks[taskType][currentPos] || getRandomDefaultTask(taskType);
+            } else {
+                taskText = getRandomDefaultTask(type);
+            }
+            
+            taskResult.innerHTML = `
+                <div class="task-card">
+                    <h3>${type.toUpperCase()}</h3>
+                    <p>${taskText}</p>
+                </div>
+            `;
+            
+            document.getElementById('continue-btn').style.display = 'block';
+            document.getElementById('truth-btn').style.display = 'none';
+            document.getElementById('dare-btn').style.display = 'none';
+        }
+
+        function getRandomDefaultTask(type) {
+            const tasksArray = tasks[type];
+            return tasksArray[Math.floor(Math.random() * tasksArray.length)];
+        }
+
+        function updatePieces() {
+            // Clear all pieces
+            const pieces = document.querySelectorAll('.piece');
+            pieces.forEach(function(piece) {
+                piece.remove();
+            });
+
+            // Add pieces to new positions
+            for (const name in positions) {
+                const player = players.find(function(p) {
+                    return p.name === name;
+                });
+
+                if (player) {
+                    const position = positions[name];
+                    const cellIndex = 100 - position;
+                    const cells = document.querySelectorAll('#game-board .cell');
+                    
+                    if (cells[cellIndex]) {
+                        const piece = document.createElement('div');
+                        piece.className = 'piece';
+                        piece.style.backgroundColor = player.color;
+                        piece.textContent = player.number;
+                        piece.title = `${player.name} (Posisi: ${position})`;
+                        cells[cellIndex].appendChild(piece);
+                    }
+                }
+            }
+        }
+
+        function updateScoreboard() {
+            const scoreList = document.getElementById('score-list');
+            scoreList.innerHTML = '';
+
+            // Sort players by position
+            const sortedPlayers = [...players].sort(function(a, b) {
+                return positions[b.name] - positions[a.name];
+            });
+
+            // Create score items
+            sortedPlayers.forEach(function(player, index) {
+                const scoreItem = document.createElement('div');
+                scoreItem.className = 'score-item';
+
+                const playerRank = document.createElement('div');
+                playerRank.className = 'player-rank';
+
+                const playerColor = document.createElement('div');
+                playerColor.className = 'player-color';
+                playerColor.style.backgroundColor = player.color;
+
+                const playerName = document.createElement('span');
+                playerName.textContent = player.name;
+
+                const playerPosition = document.createElement('div');
+                playerPosition.className = 'player-position';
+                playerPosition.textContent = positions[player.name];
+
+                playerRank.appendChild(playerColor);
+                playerRank.appendChild(playerName);
+                scoreItem.appendChild(playerRank);
+                scoreItem.appendChild(playerPosition);
+                scoreList.appendChild(scoreItem);
+            });
+        }
+
+        function updateCurrentTurn() {
+            const player = players[currentPlayer];
+            const turnDisplay = document.getElementById('current-turn');
+            document.getElementById('turn-text').textContent = `Giliran: ${player.name}`;
+            turnDisplay.style.color = player.color;
+            document.querySelector('.current-turn-indicator').style.backgroundColor = player.color;
+        }
+
+        function nextPlayer() {
+            currentPlayer = (currentPlayer + 1) % players.length;
+            updateCurrentTurn();
+        }
+
+        function continueGame() {
+            document.getElementById('truth-dare-modal').style.display = 'none';
+            document.getElementById('task-result').innerHTML = '';
+            document.getElementById('continue-btn').style.display = 'none';
+            document.getElementById('truth-btn').style.display = 'inline-block';
+            document.getElementById('dare-btn').style.display = 'inline-block';
+
+            nextPlayer();
+        }
+
+        function showWinner(player) {
+            document.getElementById('winner-name').textContent = player.name;
+            document.getElementById('winner-name').style.color = player.color;
+            document.getElementById('winner-modal').style.display = 'flex';
+
+            // Stop voice recognition
+            if (recognition) {
+                recognition.stop();
+            }
+
+            // Create confetti
+            for (let i = 0; i < 100; i++) {
+                createConfetti();
+            }
+        }
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.width = (Math.random() * 10 + 5) + 'px';
+            confetti.style.height = (Math.random() * 10 + 5) + 'px';
+            confetti.style.animationDuration = (Math.random() * 2 + 1) + 's';
+            document.body.appendChild(confetti);
+
+            // Remove after animation
+            setTimeout(function() {
+                confetti.remove();
+            }, 3000);
+        }
+
+        function resetGame() {
+            document.getElementById('winner-modal').style.display = 'none';
+            
+            if (isOnlineGame) {
+                // In a real app, you would disconnect from the socket here
+                if (socket) {
+                    socket.close();
+                }
+                
+                // Reset online game state
+                isHost = false;
+                roomCode = '';
+                myPlayerId = '';
+                maxPlayers = 2;
+                
+                // Clear player lists
+                document.getElementById('host-player-list').innerHTML = '';
+                document.getElementById('guest-player-list').innerHTML = '';
+                
+                // Hide online status
+                document.getElementById('online-status').style.display = 'none';
+                
+                switchScreen('start-screen');
+            } else {
+                // For offline game
+                switchScreen('start-screen');
+            }
+        }
+
+        // Start the game when
+              // Start the game when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initGame();
+        });
+    </script>
+</body>
+</html>
