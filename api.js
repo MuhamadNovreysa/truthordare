@@ -1,10 +1,10 @@
 // =====================
-// 1. INISIALISASI FIREBASE
+// 1. FIREBASE INITIALIZATION
 // =====================
 const firebaseConfig = {
   apiKey: "AIzaSyAaYFKvIjfMfYbv5rZ6X5MZrLDtgj5QOEc",
   authDomain: "ulartangga-online.firebaseapp.com",
-  databaseURL: "https://ulartangga-online-default-rtdb.firebaseio.com", // Tambahkan ini
+  databaseURL: "https://ulartangga-online-default-rtdb.firebaseio.com",
   projectId: "ulartangga-online",
   storageBucket: "ulartangga-online.firebasestorage.app",
   messagingSenderId: "344900787531",
@@ -15,18 +15,34 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// =====================
-// 2. FUNGSI UTAMA GAME
-// =====================
-let roomCode;
-let playerId;
+// Player colors
+const colors = [
+  '#FF6584', // Pink
+  '#6C63FF', // Purple
+  '#48BB78', // Green
+  '#F6AD55', // Orange
+  '#9F7AEA', // Lavender
+  '#4299E1', // Blue
+  '#ED8936', // Dark Orange
+  '#667EEA'  // Blue Purple
+];
 
-// Generate random ID
-function generateId() {
+// =====================
+// 2. CORE GAME FUNCTIONS
+// =====================
+
+/**
+ * Generates a unique player ID
+ * @return {string} Player ID
+ */
+function generatePlayerId() {
   return 'player-' + Math.random().toString(36).substr(2, 9);
 }
 
-// Generate room code
+/**
+ * Generates a room code (6 characters)
+ * @return {string} Room code
+ */
 function generateRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let result = '';
@@ -36,106 +52,127 @@ function generateRoomCode() {
   return result;
 }
 
-// Get random color for player
-function getRandomColor() {
-  const colors = ['#FF6584', '#6C63FF', '#48BB78', '#F6AD55', '#9F7AEA', '#4299E1', '#ED8936', '#667EEA'];
-  return colors[Math.floor(Math.random() * colors.length)];
-}
-
-// Fungsi buat room baru
-function createRoom(playerName) {
-  playerId = generateId();
-  roomCode = generateRoomCode();
-  
+/**
+ * Creates a new game room
+ * @param {string} playerName Host player name
+ * @param {number} maxPlayers Maximum number of players
+ * @param {string} taskMode Game task mode ('system' or 'manual')
+ * @return {Promise<{roomCode: string, playerId: string, roomRef: firebase.database.Reference}>}
+ */
+async function createRoom(playerName, maxPlayers, taskMode) {
+  const playerId = generatePlayerId();
+  const roomCode = generateRoomCode();
   const roomRef = database.ref('rooms/' + roomCode);
   
-  roomRef.set({
+  await roomRef.set({
     host: playerId,
     players: {
       [playerId]: {
         name: playerName,
         position: 1,
-        color: getRandomColor(),
-        ready: false
+        color: colors[0],
+        ready: true,
+        isCurrent: true
       }
     },
+    currentPlayer: playerId,
     status: "waiting",
+    maxPlayers,
+    taskMode,
     createdAt: firebase.database.ServerValue.TIMESTAMP
   });
   
-  // Listen perubahan data di room ini
-  roomRef.on('value', (snapshot) => {
-    const roomData = snapshot.val();
-    if (roomData) {
-      updateGameUI(roomData);
-    }
-  });
-  
-  return roomCode;
+  return { roomCode, playerId, roomRef };
 }
 
-// Fungsi gabung room
-function joinRoom(playerName, code) {
-  playerId = generateId();
-  roomCode = code.toUpperCase();
+/**
+ * Joins an existing room
+ * @param {string} playerName Player name
+ * @param {string} roomCode Room code to join
+ * @return {Promise<{roomCode: string, playerId: string, roomRef: firebase.database.Reference}>}
+ */
+async function joinRoom(playerName, roomCode) {
+  const playerId = generatePlayerId();
+  const formattedRoomCode = roomCode.toUpperCase();
+  const roomRef = database.ref('rooms/' + formattedRoomCode);
   
-  const roomRef = database.ref('rooms/' + roomCode);
+  // Check if room exists
+  const snapshot = await roomRef.once('value');
+  if (!snapshot.exists()) {
+    throw new Error('Room tidak ditemukan');
+  }
   
-  return roomRef.once('value').then((snapshot) => {
-    if (!snapshot.exists()) {
-      throw new Error('Room tidak ditemukan');
-    }
-    
-    return roomRef.child('players/' + playerId).set({
-      name: playerName,
-      position: 1,
-      color: getRandomColor(),
-      ready: false
-    });
-  }).then(() => {
-    // Setup listeners
-    setupRoomListeners();
-    return roomCode;
+  const roomData = snapshot.val();
+  
+  // Check if room is full
+  const playerCount = Object.keys(roomData.players || {}).length;
+  if (playerCount >= roomData.maxPlayers) {
+    throw new Error('Room sudah penuh');
+  }
+  
+  // Add player to room
+  await roomRef.child('players/' + playerId).set({
+    name: playerName,
+    position: 1,
+    color: colors[playerCount % colors.length],
+    ready: false,
+    isCurrent: false
   });
+  
+  return { roomCode: formattedRoomCode, playerId, roomRef };
 }
 
-// Setup semua listener room
-function setupRoomListeners() {
-  const roomRef = database.ref('rooms/' + roomCode);
-  
-  // Listener untuk perubahan data room
+/**
+ * Sets up room listeners
+ * @param {firebase.database.Reference} roomRef Firebase room reference
+ * @param {function} onRoomUpdate Callback when room updates
+ * @param {function} onPlayerJoined Callback when player joins
+ * @param {function} onPlayerUpdated Callback when player updates
+ * @param {function} onGameStarted Callback when game starts
+ */
+function setupRoomListeners(roomRef, onRoomUpdate, onPlayerJoined, onPlayerUpdated, onGameStarted) {
+  // Room data listener
   roomRef.on('value', (snapshot) => {
     const roomData = snapshot.val();
-    if (roomData) {
-      updateGameUI(roomData);
+    if (roomData && typeof onRoomUpdate === 'function') {
+      onRoomUpdate(roomData);
     }
   });
   
-  // Listener untuk pemain baru bergabung
+  // Player joined listener
   roomRef.child('players').on('child_added', (snapshot) => {
     const player = snapshot.val();
-    console.log(`${player.name} bergabung ke game!`);
-    onPlayerJoined(player);
+    if (player && typeof onPlayerJoined === 'function') {
+      onPlayerJoined(player);
+    }
   });
   
-  // Listener untuk perubahan posisi pemain
+  // Player updated listener
   roomRef.child('players').on('child_changed', (snapshot) => {
     const player = snapshot.val();
-    onPlayerUpdated(player);
+    if (player && typeof onPlayerUpdated === 'function') {
+      onPlayerUpdated(player);
+    }
   });
   
-  // Listener untuk status game
+  // Game status listener
   roomRef.child('status').on('value', (snapshot) => {
     const status = snapshot.val();
-    if (status === "playing") {
+    if (status === "playing" && typeof onGameStarted === 'function') {
       onGameStarted();
     }
   });
 }
 
-// Update posisi pemain
-function movePlayer(steps) {
-  const playerRef = database.ref(`rooms/${roomCode}/players/${playerId}`);
+/**
+ * Moves player position
+ * @param {firebase.database.Reference} roomRef Room reference
+ * @param {string} playerId Player ID
+ * @param {number} steps Number of steps to move
+ * @return {Promise} Move completion
+ */
+async function movePlayer(roomRef, playerId, steps) {
+  const playerRef = roomRef.child('players/' + playerId);
   return playerRef.transaction((player) => {
     if (player) {
       player.position += steps;
@@ -145,52 +182,71 @@ function movePlayer(steps) {
   });
 }
 
-// Mulai game (hanya host)
-function startGame() {
-  if (!roomCode) return;
+/**
+ * Starts the game (host only)
+ * @param {firebase.database.Reference} roomRef Room reference
+ * @return {Promise} Start game completion
+ */
+async function startGame(roomRef) {
+  // Set first player as current player
+  const playersSnapshot = await roomRef.child('players').once('value');
+  const players = playersSnapshot.val();
+  const firstPlayerId = Object.keys(players)[0];
   
-  const roomRef = database.ref('rooms/' + roomCode);
   return roomRef.update({
     status: "playing",
+    currentPlayer: firstPlayerId,
     startedAt: firebase.database.ServerValue.TIMESTAMP
   });
 }
 
-// Keluar dari room
-function leaveRoom() {
-  if (!roomCode || !playerId) return;
+/**
+ * Leaves the room
+ * @param {firebase.database.Reference} roomRef Room reference
+ * @param {string} playerId Player ID
+ * @return {Promise} Leave completion
+ */
+async function leaveRoom(roomRef, playerId) {
+  // Remove player from room
+  await roomRef.child('players/' + playerId).remove();
   
-  const roomRef = database.ref('rooms/' + roomCode);
-  return roomRef.child('players/' + playerId).remove().then(() => {
-    // Hapus semua listener
-    roomRef.off();
-    
-    // Reset variabel
-    roomCode = null;
-    playerId = null;
+  // Check if room is empty
+  const snapshot = await roomRef.child('players').once('value');
+  if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
+    // Delete empty room
+    await roomRef.remove();
+  }
+  
+  // Clean up listeners
+  roomRef.off();
+}
+
+/**
+ * Updates custom tasks in room
+ * @param {firebase.database.Reference} roomRef Room reference
+ * @param {object} customTasks Custom tasks object
+ * @param {array} warningCells Warning cells array
+ * @return {Promise} Update completion
+ */
+async function updateCustomTasks(roomRef, customTasks, warningCells) {
+  return roomRef.update({
+    customTasks,
+    warningCells
   });
 }
 
 // =====================
-// 3. FUNGSI CALLBACK (IMPLEMENTASI DI FILE LAIN)
+// 3. EXPORT FUNCTIONS
 // =====================
-// Fungsi-fungsi ini harus diimplementasikan di file utama game Anda
-function updateGameUI(roomData) {
-  // Implementasi: Update UI berdasarkan data room
-  console.log('Room data updated:', roomData);
-}
-
-function onPlayerJoined(player) {
-  // Implementasi: Tambahkan pemain ke UI
-  console.log('Player joined:', player);
-}
-
-function onPlayerUpdated(player) {
-  // Implementasi: Update posisi pemain di UI
-  console.log('Player updated:', player);
-}
-
-function onGameStarted() {
-  // Implementasi: Mulai permainan
-  console.log('Game started!');
-}
+export const GameAPI = {
+  colors,
+  generatePlayerId,
+  generateRoomCode,
+  createRoom,
+  joinRoom,
+  setupRoomListeners,
+  movePlayer,
+  startGame,
+  leaveRoom,
+  updateCustomTasks
+};
