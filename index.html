@@ -1640,16 +1640,109 @@ function setupRoomListeners() {
     });
 }
 
+// Ganti fungsi movePlayer dengan ini:
 function movePlayer(steps) {
-    return roomRef.child('players/' + myPlayerId).transaction((player) => {
-        if (player) {
-            player.position += steps;
-            if (player.position > 100) player.position = 100;
-        }
-        return player;
+    return new Promise((resolve) => {
+        const player = players.find(p => p.id === myPlayerId);
+        if (!player) return resolve();
+
+        let currentPos = positions[player.name];
+        const targetPos = Math.min(currentPos + steps, 100);
+
+        const moveInterval = setInterval(() => {
+            if (currentPos < targetPos) {
+                currentPos++;
+                
+                // Update position di Firebase dan lokal
+                roomRef.child('players/' + myPlayerId + '/position').set(currentPos)
+                    .then(() => {
+                        positions[player.name] = currentPos;
+                        updatePieces();
+                        
+                        if (currentPos === targetPos) {
+                            clearInterval(moveInterval);
+                            checkOnlineSnakesLadders(player).then(resolve);
+                        }
+                    });
+            }
+        }, 300);
     });
 }
-function startGame() {
+
+    function nextPlayer() {
+    return roomRef.once('value').then(snapshot => {
+        const roomData = snapshot.val();
+        const players = Object.keys(roomData.players);
+        const currentIndex = players.indexOf(roomData.currentPlayer);
+        const nextIndex = (currentIndex + 1) % players.length;
+        const nextPlayerId = players[nextIndex];
+        
+        return roomRef.update({
+            currentPlayer: nextPlayerId
+        }).then(() => {
+            updateCurrentTurn();
+        });
+    });
+}
+
+// Tambahkan fungsi ini:
+function checkOnlineSnakesLadders(player) {
+    return roomRef.once('value').then(snapshot => {
+        const roomData = snapshot.val();
+        const currentPos = roomData.players[myPlayerId].position;
+
+        if (currentPos >= 100) {
+            showWinner(player);
+            return;
+        }
+
+        let promise = Promise.resolve();
+        
+        if (snakes[currentPos]) {
+            promise = roomRef.child('players/' + myPlayerId + '/position')
+                .set(snakes[currentPos])
+                .then(() => {
+                    positions[player.name] = snakes[currentPos];
+                    updatePieces();
+                });
+        } else if (ladders[currentPos]) {
+            promise = roomRef.child('players/' + myPlayerId + '/position')
+                .set(ladders[currentPos])
+                .then(() => {
+                    positions[player.name] = ladders[currentPos];
+                    updatePieces();
+                });
+        }
+
+        return promise.then(() => checkOnlineTruthDare());
+    });
+}
+
+// Tambahkan fungsi ini:
+function checkOnlineTruthDare() {
+    return roomRef.once('value').then(snapshot => {
+        const roomData = snapshot.val();
+        const currentPos = roomData.players[myPlayerId].position;
+
+        if (warningCells.includes(currentPos)) {
+            if (taskMode === 'manual' && customTasks[currentPos]) {
+                showCustomTaskModal(currentPos);
+            } else {
+                document.getElementById('truth-dare-modal').style.display = 'flex';
+            }
+            return false;
+        }
+        return true;
+    }).then(shouldContinue => {
+        if (shouldContinue) {
+            return nextPlayer();
+        }
+    });
+}
+
+
+
+    function startGame() {
     if (!roomCode) return Promise.reject("No room code");
     
     return roomRef.child('players').once('value').then(snapshot => {
@@ -2023,8 +2116,19 @@ document.getElementById('online-start-btn').onclick = function() {
     };
 
     document.getElementById('roll-btn').onclick = function() {
+    if (isOnlineGame) {
+        roomRef.once('value').then(snapshot => {
+            const roomData = snapshot.val();
+            if (roomData.currentPlayer === myPlayerId) {
+                rollDice();
+            } else {
+                alert("Tunggu giliran Anda!");
+            }
+        });
+    } else {
         rollDice();
-    };
+    }
+};
 
     document.getElementById('truth-btn').onclick = function() {
         showTask('truth');
@@ -2236,17 +2340,16 @@ function startOnlineGame() {
         });
     }
 }
-
 function rollDice() {
     const dice = document.getElementById('dice');
     const rollBtn = document.getElementById('roll-btn');
-
+    
     rollBtn.disabled = true;
     dice.classList.add('rolling');
 
     let rolls = 0;
     const maxRolls = 10;
-    const rollInterval = setInterval(function() {
+    const rollInterval = setInterval(() => {
         dice.textContent = Math.floor(Math.random() * 6) + 1;
         rolls++;
 
@@ -2257,15 +2360,20 @@ function rollDice() {
             dice.classList.remove('rolling');
             
             if (isOnlineGame) {
-                movePlayer(diceValue).then(() => {
-                    // Position update will trigger onPlayerUpdated
-                    rollBtn.disabled = false;
-                }).catch(error => {
-                    console.error("Error moving player:", error);
-                    rollBtn.disabled = false;
+                roomRef.once('value').then(snapshot => {
+                    const roomData = snapshot.val();
+                    if (roomData.currentPlayer === myPlayerId) {
+                        movePlayer(diceValue).finally(() => {
+                            rollBtn.disabled = false;
+                        });
+                    } else {
+                        alert("Bukan giliran Anda!");
+                        rollBtn.disabled = false;
+                    }
                 });
             } else {
                 movePlayerOffline(diceValue);
+                rollBtn.disabled = false;
             }
         }
     }, 100);
