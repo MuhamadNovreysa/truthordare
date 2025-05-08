@@ -1758,19 +1758,37 @@ function showCustomTaskModal(cellNumber) {
 }
 
 function nextPlayer() {
-    return roomRef.once('value').then(snapshot => {
-        const roomData = snapshot.val();
-        const players = Object.keys(roomData.players);
-        const currentIndex = players.indexOf(roomData.currentPlayer);
-        const nextIndex = (currentIndex + 1) % players.length;
-        const nextPlayerId = players[nextIndex];
-        
-        return roomRef.update({
-            currentPlayer: nextPlayerId
-        }).then(() => {
-            updateCurrentTurn();
+    if (isOnlineGame) {
+        roomRef.once('value').then(snapshot => {
+            const roomData = snapshot.val();
+            const playerIds = Object.keys(roomData.players);
+            const currentIndex = playerIds.indexOf(roomData.currentPlayer);
+            
+            // Cari index pemain berikutnya yang ready
+            let nextIndex = (currentIndex + 1) % playerIds.length;
+            
+            // Skip pemain yang tidak ready
+            while (nextIndex !== currentIndex && !roomData.players[playerIds[nextIndex]].ready) {
+                nextIndex = (nextIndex + 1) % playerIds.length;
+            }
+            
+            // Jika semua pemain tidak ready (shouldn't happen)
+            if (!roomData.players[playerIds[nextIndex]].ready) {
+                console.error("No ready players found!");
+                return;
+            }
+            
+            // Update current player di Firebase
+            return roomRef.update({
+                currentPlayer: playerIds[nextIndex]
+            });
+            // Tidak perlu update currentPlayer lokal di sini, akan diupdate via listener
         });
-    });
+    } else {
+        // Offline mode
+        currentPlayer = (currentPlayer + 1) % players.length;
+        updateCurrentTurn();
+    }
 }
 
 function startGame() {
@@ -1778,7 +1796,7 @@ function startGame() {
     
     return roomRef.child('players').once('value').then(snapshot => {
         const playersData = snapshot.val();
-        const firstPlayerId = Object.keys(playersData)[0];
+        const firstPlayerId = roomRef.host;
         
         // Cek apakah semua pemain ready
         const allReady = Object.values(playersData).every(player => player.ready);
