@@ -2613,15 +2613,34 @@ function updateCurrentTurn() {
 
 function nextPlayer() {
     if (isOnlineGame) {
-        // In online mode, update current player in Firebase
-        currentPlayer = (currentPlayer + 1) % players.length;
-        roomRef.update({
-            currentPlayer: players[currentPlayer].id
-        }).then(() => {
-            updateCurrentTurn();
+        roomRef.once('value').then(snapshot => {
+            const roomData = snapshot.val();
+            const playerIds = Object.keys(roomData.players);
+            const currentIndex = playerIds.indexOf(roomData.currentPlayer);
+            
+            // Cari index pemain berikutnya yang ready
+            let nextIndex = (currentIndex + 1) % playerIds.length;
+            while (nextIndex !== currentIndex && !roomData.players[playerIds[nextIndex]].ready) {
+                nextIndex = (nextIndex + 1) % playerIds.length;
+            }
+            
+            // Jika semua pemain tidak ready (shouldn't happen)
+            if (!roomData.players[playerIds[nextIndex]].ready) {
+                console.error("No ready players found!");
+                return;
+            }
+            
+            // Update current player di Firebase
+            return roomRef.update({
+                currentPlayer: playerIds[nextIndex]
+            }).then(() => {
+                // Update local currentPlayer
+                currentPlayer = players.findIndex(p => p.id === playerIds[nextIndex]);
+                updateCurrentTurn();
+            });
         });
     } else {
-        // In offline mode, just update locally
+        // Offline mode
         currentPlayer = (currentPlayer + 1) % players.length;
         updateCurrentTurn();
     }
