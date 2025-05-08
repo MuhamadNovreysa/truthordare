@@ -1634,6 +1634,14 @@ function setupRoomListeners() {
             onGameStarted();
         }
     });
+    // Listener untuk perubahan giliran
+roomRef.child('currentPlayer').on('value', (snapshot) => {
+    if (snapshot.exists()) {
+        const currentPlayerId = snapshot.val();
+        currentPlayer = players.findIndex(p => p.id === currentPlayerId);
+        updateCurrentTurn();
+    }
+});
 }
 
 function movePlayer(steps) {
@@ -1811,6 +1819,7 @@ function leaveRoom() {
     }).then(() => {
         // Cleanup
         if (roomRef) {
+            roomRef.child('currentPlayer').off(); // <-- BARU DITAMBAHKAN INI
             roomRef.off();
             roomRef = null;
         }
@@ -2605,6 +2614,8 @@ function updateScoreboard() {
 
 function updateCurrentTurn() {
     const player = players[currentPlayer];
+    if (!player) return;
+    
     const turnDisplay = document.getElementById('current-turn');
     document.getElementById('turn-text').textContent = `Giliran: ${player.name}`;
     turnDisplay.style.color = player.color;
