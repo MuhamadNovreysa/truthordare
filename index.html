@@ -1997,8 +1997,9 @@ function onGameStarted() {
 function initGame() {
     // Setup event listeners
     document.getElementById('start-btn').onclick = function() {
-        switchScreen('mode-screen');
-    };
+    console.log('Start button clicked'); // Debugging
+    switchScreen('mode-screen');
+};
 
     // Mode selection
     document.getElementById('offline-mode').onclick = function() {
