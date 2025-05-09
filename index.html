@@ -987,7 +987,7 @@
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  (<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 </head>
@@ -2019,9 +2019,8 @@ function initGame() {
 
     // Custom task functions
     document.getElementById('add-task-btn').onclick = addCustomTask;
-    document.getElementById('finish-tasks-btn').onclick = function() {
-    finishPlayerTasks();
-};
+    document.getElementById('finish-tasks-btn').onclick = finishPlayerTasks;
+
     // Online game options
     document.getElementById('create-room-btn').onclick = function() {
         isHost = true;
@@ -2307,12 +2306,9 @@ function initVoiceControl() {
 
 // === UI FUNCTIONS ===
 function switchScreen(screenId) {
-    console.log(`Switching to screen: ${screenId}`);
-    
     const screens = document.querySelectorAll('.screen');
     screens.forEach(function(screen) {
         if (screen.id === screenId) {
-            console.log(`Activating screen: ${screenId}`);
             screen.classList.add('active');
             
             if (screenId === 'game-screen') {
@@ -2790,47 +2786,19 @@ function setupCustomTasks() {
     updateTaskPlayerUI();
     switchScreen('custom-task-screen');
 }
+
 function updateTaskPlayerUI() {
     const player = players[currentTaskPlayer];
-    if (!player) {
-        console.error("Player not found at index", currentTaskPlayer);
-        return;
-    }
-    
-    console.log(`Updating UI for player ${currentTaskPlayer + 1} of ${players.length}: ${player.name}`);
-    
     document.getElementById('current-player-name').textContent = player.name;
     document.getElementById('current-player-number').textContent = currentTaskPlayer + 1;
     document.getElementById('total-players').textContent = players.length;
     
-    // Reset form input
+    document.getElementById('task-list').innerHTML = '<p class="text-center">Belum ada tantangan ditambahkan</p>';
     document.getElementById('task-text').value = '';
     document.getElementById('task-cell').value = '';
     
-    // Update task list display
-    if (playerTasks.length === 0) {
-        document.getElementById('task-list').innerHTML = '<p class="text-center">Belum ada tantangan ditambahkan</p>';
-    } else {
-        updateTaskListUI();
-    }
-    
-    // Update tombol "Selesai"
-    const finishBtn = document.getElementById('finish-tasks-btn');
-    const isLastPlayer = currentTaskPlayer === players.length - 1;
-    
-    finishBtn.innerHTML = isLastPlayer ? 
-        '<i class="fas fa-check mr-1"></i> Selesai & Mulai Game' : 
-        '<i class="fas fa-check mr-1"></i> Lanjut ke Pemain Berikutnya';
-    
-    // Atur status tombol berdasarkan jumlah task yang sudah dibuat
-    const currentPlayerTasks = playerTasks.filter(task => task.player === player.name);
-    const truthCount = currentPlayerTasks.filter(task => task.type === 'truth').length;
-    const dareCount = currentPlayerTasks.filter(task => task.type === 'dare').length;
-    
-    finishBtn.disabled = !(truthCount >= 2 && dareCount >= 2);
-    document.getElementById('add-task-btn').disabled = (truthCount >= 2 && dareCount >= 2);
-    
-    console.log(`Player tasks: ${playerTasks.length}, Truth: ${truthCount}, Dare: ${dareCount}`);
+    document.getElementById('finish-tasks-btn').disabled = true;
+    document.getElementById('add-task-btn').disabled = false;
 }
 
 function addCustomTask() {
@@ -2941,75 +2909,37 @@ function removeTask(index) {
 }
 
 function finishPlayerTasks() {
-    // Simpan semua task yang telah dibuat
     playerTasks.forEach(task => {
         if (!customTasks[task.cell]) {
             customTasks[task.cell] = [];
         }
         customTasks[task.cell].push({
             type: task.type,
-            text: task.text,
-            player: players[currentTaskPlayer].name
+            text: task.text
         });
     });
-
-    // Jika masih ada pemain berikutnya
+    
     if (currentTaskPlayer < players.length - 1) {
         currentTaskPlayer++;
         playerTasks = [];
         updateTaskPlayerUI();
-    } 
-    // Jika ini pemain terakhir
-    else {
-        // Update warning cells berdasarkan custom tasks
-        warningCells = Object.keys(customTasks).map(Number);
-        
-        console.log("Custom tasks:", customTasks);
-        console.log("Warning cells:", warningCells);
-        
-        // Untuk offline game
-        if (!isOnlineGame) {
-            console.log("Starting offline game with custom tasks");
-            
-            // Inisialisasi game state
-            for (const player of players) {
-                positions[player.name] = 1;
-            }
-            currentPlayer = 0;
-            
-            // Inisialisasi papan permainan
-            initBoard();
-            updateScoreboard();
-            updateCurrentTurn();
-            
-            // Pindah ke layar game
-            switchScreen('game-screen');
-            initVoiceControl();
-            
-            return; // Keluar dari fungsi setelah switch screen
-        } 
-        // Untuk online game
-        else {
-            startGameWithCustomTasks().then(() => {
-                switchScreen('game-screen');
-                initBoard();
-                updateScoreboard();
-                updateCurrentTurn();
-                initVoiceControl();
-            });
-        }
+    } else {
+        startGameWithCustomTasks();
     }
 }
 
 function startGameWithCustomTasks() {
     return new Promise((resolve) => {
-        warningCells = Object.keys(customTasks).map(Number);
+        warningCells.length = 0;
+        warningCells.push(...Object.keys(customTasks).map(Number));
         
         if (isOnlineGame) {
             roomRef.update({
                 customTasks: customTasks,
                 warningCells: warningCells
-            }).then(resolve);
+            }).then(() => {
+                resolve();
+            });
         } else {
             resolve();
         }
@@ -3040,4 +2970,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+
 
