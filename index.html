@@ -2787,7 +2787,6 @@ function setupCustomTasks() {
     updateTaskPlayerUI();
     switchScreen('custom-task-screen');
 }
-
 function updateTaskPlayerUI() {
     const player = players[currentTaskPlayer];
     document.getElementById('current-player-name').textContent = player.name;
@@ -2802,7 +2801,7 @@ function updateTaskPlayerUI() {
     if (playerTasks.length === 0) {
         document.getElementById('task-list').innerHTML = '<p class="text-center">Belum ada tantangan ditambahkan</p>';
     } else {
-        updateTaskListUI(); // Pastikan fungsi ini sudah didefinisikan
+        updateTaskListUI();
     }
     
     // Update tombol "Selesai"
@@ -2813,10 +2812,16 @@ function updateTaskPlayerUI() {
         '<i class="fas fa-check mr-1"></i> Selesai & Mulai Game' : 
         '<i class="fas fa-check mr-1"></i> Lanjut ke Pemain Berikutnya';
     
-    // Atur status tombol
-    finishBtn.disabled = playerTasks.length === 0;
-    document.getElementById('add-task-btn').disabled = false;
+    // Atur status tombol berdasarkan jumlah task yang sudah dibuat
+    const currentPlayerTasks = playerTasks.filter(task => task.player === player.name);
+    const truthCount = currentPlayerTasks.filter(task => task.type === 'truth').length;
+    const dareCount = currentPlayerTasks.filter(task => task.type === 'dare').length;
+    
+    finishBtn.disabled = !(truthCount >= 2 && dareCount >= 2);
+    document.getElementById('add-task-btn').disabled = (truthCount >= 2 && dareCount >= 2);
 }
+
+
 function addCustomTask() {
     const type = document.getElementById('task-type').value;
     const text = document.getElementById('task-text').value.trim();
@@ -2933,7 +2938,7 @@ function finishPlayerTasks() {
         customTasks[task.cell].push({
             type: task.type,
             text: task.text,
-            player: players[currentTaskPlayer].name // Gunakan ini untuk konsistensi
+            player: players[currentTaskPlayer].name
         });
     });
 
@@ -2945,11 +2950,11 @@ function finishPlayerTasks() {
     } 
     // Jika ini pemain terakhir
     else {
+        // Update warning cells berdasarkan custom tasks
+        warningCells = Object.keys(customTasks).map(Number);
+        
         // Untuk offline game
         if (!isOnlineGame) {
-            // Update warning cells berdasarkan custom tasks
-            warningCells = Object.keys(customTasks).map(Number);
-            
             // Inisialisasi papan permainan
             initBoard();
             updateScoreboard();
@@ -2970,11 +2975,6 @@ function finishPlayerTasks() {
             });
         }
     }
-
-    // Log informasi untuk debugging
-    console.log("Custom tasks:", customTasks);
-    console.log("Warning cells:", warningCells);
-    console.log("Moving to game screen...");
 }
 
 function startGameWithCustomTasks() {
