@@ -2797,7 +2797,17 @@ function updateTaskPlayerUI() {
     document.getElementById('task-text').value = '';
     document.getElementById('task-cell').value = '';
     
-    document.getElementById('finish-tasks-btn').disabled = true;
+    // Periksa apakah pemain saat ini adalah pemain terakhir
+    const isLastPlayer = currentTaskPlayer === players.length - 1;
+    
+    // Update teks tombol "Selesai" berdasarkan apakah ini pemain terakhir atau bukan
+    const finishBtn = document.getElementById('finish-tasks-btn');
+    finishBtn.innerHTML = isLastPlayer ? 
+        '<i class="fas fa-check mr-1"></i> Selesai & Mulai Game' : 
+        '<i class="fas fa-check mr-1"></i> Lanjut ke Pemain Berikutnya';
+    
+    // Nonaktifkan tombol jika belum ada task yang ditambahkan
+    finishBtn.disabled = playerTasks.length === 0;
     document.getElementById('add-task-btn').disabled = false;
 }
 
@@ -2909,22 +2919,42 @@ function removeTask(index) {
 }
 
 function finishPlayerTasks() {
+    // Simpan semua task yang telah dibuat
     playerTasks.forEach(task => {
         if (!customTasks[task.cell]) {
             customTasks[task.cell] = [];
         }
         customTasks[task.cell].push({
             type: task.type,
-            text: task.text
+            text: task.text,
+            player: task.player // Tambahkan informasi pemain yang membuat task
         });
     });
     
+    // Jika masih ada pemain berikutnya, lanjut ke pemain berikutnya
     if (currentTaskPlayer < players.length - 1) {
         currentTaskPlayer++;
         playerTasks = [];
         updateTaskPlayerUI();
     } else {
-        startGameWithCustomTasks();
+        // Jika ini adalah pemain terakhir, langsung mulai game
+        if (isOnlineGame) {
+            startGameWithCustomTasks().then(() => {
+                switchScreen('game-screen');
+                initBoard();
+                updateScoreboard();
+                updateCurrentTurn();
+                initVoiceControl();
+            });
+        } else {
+            // Untuk offline game, langsung mulai game
+            warningCells = Object.keys(customTasks).map(Number);
+            initBoard();
+            updateScoreboard();
+            updateCurrentTurn();
+            switchScreen('game-screen');
+            initVoiceControl();
+        }
     }
 }
 
