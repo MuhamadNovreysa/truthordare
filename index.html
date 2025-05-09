@@ -2019,8 +2019,9 @@ function initGame() {
 
     // Custom task functions
     document.getElementById('add-task-btn').onclick = addCustomTask;
-    document.getElementById('finish-tasks-btn').onclick = finishPlayerTasks;
-
+    document.getElementById('finish-tasks-btn').onclick = function() {
+    finishPlayerTasks();
+};
     // Online game options
     document.getElementById('create-room-btn').onclick = function() {
         isHost = true;
@@ -2793,24 +2794,29 @@ function updateTaskPlayerUI() {
     document.getElementById('current-player-number').textContent = currentTaskPlayer + 1;
     document.getElementById('total-players').textContent = players.length;
     
-    document.getElementById('task-list').innerHTML = '<p class="text-center">Belum ada tantangan ditambahkan</p>';
+    // Reset form input
     document.getElementById('task-text').value = '';
     document.getElementById('task-cell').value = '';
     
-    // Periksa apakah pemain saat ini adalah pemain terakhir
+    // Update task list display
+    if (playerTasks.length === 0) {
+        document.getElementById('task-list').innerHTML = '<p class="text-center">Belum ada tantangan ditambahkan</p>';
+    } else {
+        updateTaskListUI(); // Pastikan fungsi ini sudah didefinisikan
+    }
+    
+    // Update tombol "Selesai"
+    const finishBtn = document.getElementById('finish-tasks-btn');
     const isLastPlayer = currentTaskPlayer === players.length - 1;
     
-    // Update teks tombol "Selesai" berdasarkan apakah ini pemain terakhir atau bukan
-    const finishBtn = document.getElementById('finish-tasks-btn');
     finishBtn.innerHTML = isLastPlayer ? 
         '<i class="fas fa-check mr-1"></i> Selesai & Mulai Game' : 
         '<i class="fas fa-check mr-1"></i> Lanjut ke Pemain Berikutnya';
     
-    // Nonaktifkan tombol jika belum ada task yang ditambahkan
+    // Atur status tombol
     finishBtn.disabled = playerTasks.length === 0;
     document.getElementById('add-task-btn').disabled = false;
 }
-
 function addCustomTask() {
     const type = document.getElementById('task-type').value;
     const text = document.getElementById('task-text').value.trim();
@@ -2927,18 +2933,34 @@ function finishPlayerTasks() {
         customTasks[task.cell].push({
             type: task.type,
             text: task.text,
-            player: task.player // Tambahkan informasi pemain yang membuat task
+            player: players[currentTaskPlayer].name // Gunakan ini untuk konsistensi
         });
     });
-    
-    // Jika masih ada pemain berikutnya, lanjut ke pemain berikutnya
+
+    // Jika masih ada pemain berikutnya
     if (currentTaskPlayer < players.length - 1) {
         currentTaskPlayer++;
         playerTasks = [];
         updateTaskPlayerUI();
-    } else {
-        // Jika ini adalah pemain terakhir, langsung mulai game
-        if (isOnlineGame) {
+    } 
+    // Jika ini pemain terakhir
+    else {
+        // Untuk offline game
+        if (!isOnlineGame) {
+            // Update warning cells berdasarkan custom tasks
+            warningCells = Object.keys(customTasks).map(Number);
+            
+            // Inisialisasi papan permainan
+            initBoard();
+            updateScoreboard();
+            updateCurrentTurn();
+            
+            // Pindah ke layar game
+            switchScreen('game-screen');
+            initVoiceControl();
+        } 
+        // Untuk online game
+        else {
             startGameWithCustomTasks().then(() => {
                 switchScreen('game-screen');
                 initBoard();
@@ -2946,30 +2968,24 @@ function finishPlayerTasks() {
                 updateCurrentTurn();
                 initVoiceControl();
             });
-        } else {
-            // Untuk offline game, langsung mulai game
-            warningCells = Object.keys(customTasks).map(Number);
-            initBoard();
-            updateScoreboard();
-            updateCurrentTurn();
-            switchScreen('game-screen');
-            initVoiceControl();
         }
     }
+
+    // Log informasi untuk debugging
+    console.log("Custom tasks:", customTasks);
+    console.log("Warning cells:", warningCells);
+    console.log("Moving to game screen...");
 }
 
 function startGameWithCustomTasks() {
     return new Promise((resolve) => {
-        warningCells.length = 0;
-        warningCells.push(...Object.keys(customTasks).map(Number));
+        warningCells = Object.keys(customTasks).map(Number);
         
         if (isOnlineGame) {
             roomRef.update({
                 customTasks: customTasks,
                 warningCells: warningCells
-            }).then(() => {
-                resolve();
-            });
+            }).then(resolve);
         } else {
             resolve();
         }
