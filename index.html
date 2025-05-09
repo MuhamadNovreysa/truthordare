@@ -2307,9 +2307,12 @@ function initVoiceControl() {
 
 // === UI FUNCTIONS ===
 function switchScreen(screenId) {
+    console.log(`Switching to screen: ${screenId}`);
+    
     const screens = document.querySelectorAll('.screen');
     screens.forEach(function(screen) {
         if (screen.id === screenId) {
+            console.log(`Activating screen: ${screenId}`);
             screen.classList.add('active');
             
             if (screenId === 'game-screen') {
@@ -2789,6 +2792,13 @@ function setupCustomTasks() {
 }
 function updateTaskPlayerUI() {
     const player = players[currentTaskPlayer];
+    if (!player) {
+        console.error("Player not found at index", currentTaskPlayer);
+        return;
+    }
+    
+    console.log(`Updating UI for player ${currentTaskPlayer + 1} of ${players.length}: ${player.name}`);
+    
     document.getElementById('current-player-name').textContent = player.name;
     document.getElementById('current-player-number').textContent = currentTaskPlayer + 1;
     document.getElementById('total-players').textContent = players.length;
@@ -2819,8 +2829,9 @@ function updateTaskPlayerUI() {
     
     finishBtn.disabled = !(truthCount >= 2 && dareCount >= 2);
     document.getElementById('add-task-btn').disabled = (truthCount >= 2 && dareCount >= 2);
+    
+    console.log(`Player tasks: ${playerTasks.length}, Truth: ${truthCount}, Dare: ${dareCount}`);
 }
-
 
 function addCustomTask() {
     const type = document.getElementById('task-type').value;
@@ -2953,8 +2964,19 @@ function finishPlayerTasks() {
         // Update warning cells berdasarkan custom tasks
         warningCells = Object.keys(customTasks).map(Number);
         
+        console.log("Custom tasks:", customTasks);
+        console.log("Warning cells:", warningCells);
+        
         // Untuk offline game
         if (!isOnlineGame) {
+            console.log("Starting offline game with custom tasks");
+            
+            // Inisialisasi game state
+            for (const player of players) {
+                positions[player.name] = 1;
+            }
+            currentPlayer = 0;
+            
             // Inisialisasi papan permainan
             initBoard();
             updateScoreboard();
@@ -2963,6 +2985,8 @@ function finishPlayerTasks() {
             // Pindah ke layar game
             switchScreen('game-screen');
             initVoiceControl();
+            
+            return; // Keluar dari fungsi setelah switch screen
         } 
         // Untuk online game
         else {
