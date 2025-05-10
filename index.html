@@ -1827,6 +1827,11 @@ function startGame() {
             throw new Error("Masih ada pemain yang belum ready!");
         }
 
+        // Jika mode manual, pastikan custom tasks sudah dibuat
+        if (roomData.taskMode === 'manual' && (!roomData.customTasks || Object.keys(roomData.customTasks).length === 0)) {
+            throw new Error("Silakan buat tantangan manual terlebih dahulu!");
+        }
+
         return roomRef.update({
             status: "playing",
             currentPlayer: firstPlayerId,
@@ -1942,6 +1947,13 @@ function onGameStarted() {
         Object.entries(roomData.players || {}).forEach(([id, player]) => {
             positions[player.name] = player.position;
         });
+
+        // Load task mode and custom tasks
+        taskMode = roomData.taskMode || 'system';
+        if (taskMode === 'manual' && roomData.customTasks) {
+            customTasks = roomData.customTasks;
+            warningCells = Object.keys(customTasks).map(Number);
+        }
 
         // Set current player berdasarkan data dari Firebase
         if (roomData.currentPlayer) {
@@ -2904,7 +2916,6 @@ function removeTask(index) {
     document.getElementById('add-task-btn').disabled = false;
 }
 
-
 function finishPlayerTasks() {
     // Simpan semua tantangan dari pemain saat ini
     playerTasks.forEach(task => {
@@ -2928,11 +2939,19 @@ function finishPlayerTasks() {
         // Semua pemain sudah selesai, mulai game
         if (isOnlineGame) {
             // Untuk mode online
+            const warningCellsFromTasks = Object.keys(customTasks).map(Number);
+            
+            // Update room data with custom tasks
             roomRef.update({
                 customTasks: customTasks,
-                warningCells: Object.keys(customTasks).map(Number),
+                warningCells: warningCellsFromTasks,
+                taskMode: 'manual', // Ensure task mode is set to manual
                 status: "playing"
             }).then(() => {
+                // Update local variables
+                warningCells = warningCellsFromTasks;
+                taskMode = 'manual';
+                
                 initBoard();
                 updateScoreboard();
                 updateCurrentTurn();
@@ -2944,7 +2963,8 @@ function finishPlayerTasks() {
             });
         } else {
             // Untuk mode offline
-            warningCells = Object.keys(customTasks).map(Number); // Update warningCells
+            warningCells = Object.keys(customTasks).map(Number);
+            taskMode = 'manual';
             initBoard();
             updateScoreboard();
             updateCurrentTurn();
@@ -2952,7 +2972,8 @@ function finishPlayerTasks() {
             initVoiceControl();
         }
     }
-}
+                    }
+
 
 function startGameWithCustomTasks() {
     // Update warning cells berdasarkan custom tasks
