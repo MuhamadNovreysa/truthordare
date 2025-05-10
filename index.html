@@ -149,963 +149,968 @@
             transform: translateY(-5px);
         }
 
-/* === PLAYER INPUT === */
-        .player-input-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 2rem 0;
-            width: 100%;
-        }
-
-        .player-input {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .color-preview {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .color-preview:hover {
-            transform: scale(1.1);
-        }
-
-        .player-input input {
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            width: 100%;
-            text-align: center;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .player-input input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
-        }
-
-        /* === GAME BOARD === */
-        .board-container {
-            position: relative;
-            width: 100%;
-            max-width: 700px;
-            margin: 2rem auto;
-            perspective: 1000px;
-        }
-
-        .board {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: 4px;
-            width: 100%;
-            background-color: white;
-            padding: 15px;
-            border-radius: 16px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            transform-style: preserve-3d;
-            transform: rotateX(5deg);
-            position: relative;
-            z-index: 1;
-        }
-
-        .board::before {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 5%;
-            width: 90%;
-            height: 20px;
-            background: rgba(0,0,0,0.1);
-            border-radius: 50%;
-            filter: blur(10px);
-            z-index: -1;
-        }
-
-        .cell {
-            aspect-ratio: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 12px;
-            font-weight: bold;
-            position: relative;
-            border-radius: 8px;
-            background-color: #f8fafc;
-            transition: all 0.3s ease;
-            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
-        }
-
-        .cell:hover {
-            transform: scale(1.05);
-            z-index: 5;
-        }
-
-        .cell.snake {
-            background: linear-gradient(135deg, var(--danger), #fc8181);
-            color: white;
-        }
-
-        .cell.ladder {
-            background: linear-gradient(135deg, var(--success), #68d391);
-            color: white;
-        }
-
-        .cell.warning {
-            background: linear-gradient(135deg, var(--warning), #f6ad55);
-            color: white;
-        }
-
-        .cell-number {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            font-size: 0.7rem;
-            color: var(--dark-gray);
-        }
-
-        .piece {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            position: absolute;
-            border: 2px solid white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 10;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.7rem;
-            font-weight: bold;
-            color: white;
-        }
-
-/* === SCOREBOARD === */
-        .scoreboard {
-            background-color: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin: 1rem auto;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .scoreboard::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 8px;
-            height: 100%;
-            background: linear-gradient(to bottom, var(--primary), var(--secondary));
-        }
-
-        .scoreboard h3 {
-            margin-bottom: 1rem;
-            color: var(--dark);
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .scoreboard h3::before {
-            content: '🏆';
-            margin-right: 10px;
-        }
-
-        .score-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #edf2f7;
-            align-items: center;
-        }
-
-        .score-item:last-child {
-            border-bottom: none;
-        }
-
-        .player-rank {
-            display: flex;
-            align-items: center;
-            font-weight: 600;
-        }
-
-        .player-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            margin-right: 10px;
-            flex-shrink: 0;
-        }
-
-        .player-position {
-            background-color: var(--primary);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        /* === CONTROLS === */
-        .controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            margin: 2rem 0;
-        }
-
-        .dice-container {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            perspective: 1000px;
-        }
-
-        .dice {
-            width: 100%;
-            height: 100%;
-            background-color: white;
-            border-radius: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2rem;
-            font-weight: bold;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            transform-style: preserve-3d;
-            transition: transform 0.5s ease;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .dice::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 16px;
-            box-shadow: inset 0 0 0 2px rgba(0,0,0,0.1);
-            pointer-events: none;
-        }
-
-        .dice.rolling {
-            animation: rollDice 0.5s ease-in-out infinite;
-        }
-
-        @keyframes rollDice {
-            0%, 100% { transform: rotateX(0) rotateY(0); }
-            25% { transform: rotateX(90deg) rotateY(0); }
-            50% { transform: rotateX(180deg) rotateY(90deg); }
-            75% { transform: rotateX(0) rotateY(180deg); }
-        }
-
-        /* === CURRENT TURN === */
-        .current-turn {
-            font-weight: 700;
-            text-align: center;
-            margin: 1rem 0;
-            padding: 12px 20px;
-            background-color: white;
-            border-radius: 50px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .current-turn-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 10px;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-/* === VOICE CONTROL === */
-        .voice-control {
-            text-align: center;
-            margin: 1rem 0;
-        }
-
-        .mic-status {
-            font-size: 0.9rem;
-            color: var(--dark-gray);
-            margin-top: 0.5rem;
-        }
-
-        .mic-btn {
-            background-color: var(--primary);
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 auto;
-            cursor: pointer;
-            box-shadow: 0 6px 12px rgba(108, 99, 255, 0.3);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .mic-btn::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .mic-btn:hover::before {
-            opacity: 1;
-        }
-
-        .mic-btn i {
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .mic-btn.active {
-            background-color: var(--success);
-            box-shadow: 0 6px 12px rgba(72, 187, 120, 0.3);
-            animation: pulse 1.5s infinite;
-        }
-
-        .mic-btn.error {
-            background-color: var(--danger);
-            box-shadow: 0 6px 12px rgba(245, 101, 101, 0.3);
-        }
-
-        /* === MODAL === */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            position: relative;
-            transform: scale(0.9);
-            opacity: 0;
-            animation: modalOpen 0.3s ease forwards;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-
-        @keyframes modalOpen {
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .modal h2 {
-            margin-bottom: 1.5rem;
-            color: var(--primary);
-            font-size: 1.8rem;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 1.5rem;
-        }
-
-        .task-card {
-            background: linear-gradient(135deg, #f6f9fc 0%, #eef2f5 100%);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            border-left: 5px solid var(--primary);
-            text-align: left;
-        }
-
-        .task-card h3 {
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-            font-size: 1.2rem;
-        }
-
-        .task-card p {
-            color: var(--dark);
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-
-        /* === WINNER ANIMATION === */
-        .confetti {
-            position: fixed;
-            width: 12px;
-            height: 12px;
-            opacity: 0;
-            z-index: 999;
-            animation: confetti 3s ease-out;
-        }
-
-        @keyframes confetti {
-            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg) scale(0.5); opacity: 0; }
-        }
-.winner-glow {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(108, 99, 255, 0.4) 0%, rgba(108, 99, 255, 0) 70%);
-            border-radius: 50%;
-            animation: glowPulse 2s infinite alternate;
-            z-index: -1;
-        }
-
-        @keyframes glowPulse {
-            from { transform: scale(0.8); opacity: 0.6; }
-            to { transform: scale(1.2); opacity: 0.9; }
-        }
-
-        /* === ONLINE GAME STYLES === */
-        .mode-select {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 2rem 0;
-            flex-wrap: wrap;
-        }
-
-        .mode-card {
-            background-color: white;
-            border-radius: 16px;
-            padding: 2rem;
-            width: 280px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .mode-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
-
-        .mode-card i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: var(--primary);
-        }
-
-        .mode-card h3 {
-            margin-bottom: 0.5rem;
-            color: var(--dark);
-        }
-
-        .mode-card p {
-            color: var(--dark-gray);
-            font-size: 0.9rem;
-        }
-
-        .room-code {
-            font-size: 2rem;
-            font-weight: bold;
-            letter-spacing: 5px;
-            color: var(--primary);
-            margin: 1rem 0;
-            padding: 10px 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            display: inline-block;
-        }
-
-        .room-options {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin: 1.5rem 0;
-        }
-
-        .room-option {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .room-option label {
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: var(--dark-gray);
-        }
-
-        .room-option input, .room-option select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-
-        .room-option input:focus, .room-option select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .lobby {
-            width: 100%;
-            max-width: 500px;
-            margin: 1rem auto;
-        }
-
-        .player-list {
-            background-color: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .player-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #edf2f7;
-            align-items: center;
-        }
-
-        .player-item:last-child {
-            border-bottom: none;
-        }
-
-        .player-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .player-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--primary);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 10px;
-            font-weight: bold;
-        }
-
-        .player-status {
-            font-size: 0.8rem;
-            padding: 3px 8px;
-            border-radius: 20px;
-            background-color: #e2e8f0;
-            color: var(--dark-gray);
-        }
-
-        .player-status.ready {
-            background-color: var(--success);
-            color: white;
-        }
-
-        .player-status.admin {
-            background-color: var(--primary);
-            color: white;
-        }
-/* === CUSTOM TASK STYLES === */
-        .task-mode-select {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 2rem 0;
-        }
-
-        .task-mode-card {
-            background-color: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            width: 200px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border: 2px solid transparent;
-        }
-
-        .task-mode-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-
-        .task-mode-card.selected {
-            border-color: var(--primary);
-            background-color: rgba(108, 99, 255, 0.05);
-        }
-
-        .task-mode-card i {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary);
-        }
-
-        .task-mode-card h3 {
-            margin-bottom: 0.5rem;
-            color: var(--dark);
-        }
-
-        .custom-task-container {
-            width: 100%;
-            max-width: 600px;
-            margin: 1rem auto;
-        }
-
-        .custom-task-form {
-            background-color: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .task-input-group {
-            margin-bottom: 1rem;
-        }
-
-        .task-input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--dark-gray);
-        }
-
-        .task-input-group input, .task-input-group textarea, .task-input-group select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .task-input-group textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        .task-input-group input:focus, .task-input-group textarea:focus, .task-input-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .task-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 1.5rem;
-        }
-
-        .task-list {
-            margin-top: 1.5rem;
-        }
-
-        .task-item {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .task-item-info {
-            flex: 1;
-        }
-
-        .task-item-type {
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .task-item-cell {
-            font-size: 0.8rem;
-            color: var(--dark-gray);
-        }
-
-        .task-item-delete {
-            color: var(--danger);
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        .player-task-progress {
-            text-align: center;
-            margin: 1rem 0;
-            font-weight: 600;
-            color: var(--dark-gray);
-        }
-
-        /* === RESPONSIVE DESIGN === */
-        @media (max-width: 768px) {
-            .game-title {
-                font-size: 2rem;
-            }
-            
-            .player-input-container {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .board {
-                grid-template-columns: repeat(10, 1fr);
-                gap: 2px;
-                padding: 10px;
-            }
-            
-            .cell {
-                font-size: 10px;
-            }
-.piece {
-                width: 18px;
-                height: 18px;
-                font-size: 0.6rem;
-            }
-            
-            .dice-container {
-                width: 60px;
-                height: 60px;
-            }
-            
-            .dice {
-                font-size: 1.5rem;
-            }
-
-            .mode-select {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .mode-card {
-                width: 100%;
-                max-width: 300px;
-            }
-
-            .task-mode-select {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .task-mode-card {
-                width: 100%;
-                max-width: 250px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .game-title {
-                font-size: 1.8rem;
-            }
-            
-            .player-input-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .controls {
-                flex-direction: column;
-            }
-            
-            .modal-buttons {
-                flex-direction: column;
-            }
-            
-            .modal-content {
-                padding: 1.5rem;
-            }
-
-            .task-buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-
-        /* === UTILITY CLASSES === */
-        .text-center {
-            text-align: center;
-        }
-
-        .mt-1 { margin-top: 0.5rem; }
-        .mt-2 { margin-top: 1rem; }
-        .mt-3 { margin-top: 1.5rem; }
-        .mt-4 { margin-top: 2rem; }
-
-        .mb-1 { margin-bottom: 0.5rem; }
-        .mb-2 { margin-bottom: 1rem; }
-        .mb-3 { margin-bottom: 1.5rem; }
-        .mb-4 { margin-bottom: 2rem; }
-    </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        /* === PLAYER INPUT === */
+        .player-input-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 2rem 0;
+            width: 100%;
+        }
+
+        .player-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .color-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .color-preview:hover {
+            transform: scale(1.1);
+        }
+
+        .player-input input {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .player-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+        }
+
+        /* === GAME BOARD === */
+        .board-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin: 2rem auto;
+            perspective: 1000px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 4px;
+            width: 100%;
+            background-color: white;
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transform-style: preserve-3d;
+            transform: rotateX(5deg);
+            position: relative;
+            z-index: 1;
+        }
+
+        .board::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 5%;
+            width: 90%;
+            height: 20px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 50%;
+            filter: blur(10px);
+            z-index: -1;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            position: relative;
+            border-radius: 8px;
+            background-color: #f8fafc;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            z-index: 5;
+        }
+
+        .cell.snake {
+            background: linear-gradient(135deg, var(--danger), #fc8181);
+            color: white;
+        }
+
+        .cell.ladder {
+            background: linear-gradient(135deg, var(--success), #68d391);
+            color: white;
+        }
+
+        .cell.warning {
+            background: linear-gradient(135deg, var(--warning), #f6ad55);
+            color: white;
+        }
+
+        .cell-number {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.7rem;
+            color: var(--dark-gray);
+        }
+
+        .piece {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            position: absolute;
+            border: 2px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* === SCOREBOARD === */
+        .scoreboard {
+            background-color: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem auto;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scoreboard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .scoreboard h3 {
+            margin-bottom: 1rem;
+            color: var(--dark);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .scoreboard h3::before {
+            content: '🏆';
+            margin-right: 10px;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+        }
+
+        .score-item:last-child {
+            border-bottom: none;
+        }
+
+        .player-rank {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .player-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .player-position {
+            background-color: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* === CONTROLS === */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 2rem 0;
+        }
+
+        .dice-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            perspective: 1000px;
+        }
+
+        .dice {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .dice::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 16px;
+            box-shadow: inset 0 0 0 2px rgba(0,0,0,0.1);
+            pointer-events: none;
+        }
+
+        .dice.rolling {
+            animation: rollDice 0.5s ease-in-out infinite;
+        }
+
+        @keyframes rollDice {
+            0%, 100% { transform: rotateX(0) rotateY(0); }
+            25% { transform: rotateX(90deg) rotateY(0); }
+            50% { transform: rotateX(180deg) rotateY(90deg); }
+            75% { transform: rotateX(0) rotateY(180deg); }
+        }
+
+        /* === CURRENT TURN === */
+        .current-turn {
+            font-weight: 700;
+            text-align: center;
+            margin: 1rem 0;
+            padding: 12px 20px;
+            background-color: white;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .current-turn-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* === VOICE CONTROL === */
+        .voice-control {
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .mic-status {
+            font-size: 0.9rem;
+            color: var(--dark-gray);
+            margin-top: 0.5rem;
+        }
+
+        .mic-btn {
+            background-color: var(--primary);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(108, 99, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mic-btn::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mic-btn:hover::before {
+            opacity: 1;
+        }
+
+        .mic-btn i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .mic-btn.active {
+            background-color: var(--success);
+            box-shadow: 0 6px 12px rgba(72, 187, 120, 0.3);
+            animation: pulse 1.5s infinite;
+        }
+
+        .mic-btn.error {
+            background-color: var(--danger);
+            box-shadow: 0 6px 12px rgba(245, 101, 101, 0.3);
+        }
+
+        /* === MODAL === */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            transform: scale(0.9);
+            opacity: 0;
+            animation: modalOpen 0.3s ease forwards;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        @keyframes modalOpen {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+
+        .task-card {
+            background: linear-gradient(135deg, #f6f9fc 0%, #eef2f5 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 5px solid var(--primary);
+            text-align: left;
+        }
+
+        .task-card h3 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .task-card p {
+            color: var(--dark);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* === WINNER ANIMATION === */
+        .confetti {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            opacity: 0;
+            z-index: 999;
+            animation: confetti 3s ease-out;
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg) scale(0.5); opacity: 0; }
+        }
+
+        .winner-glow {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(108, 99, 255, 0.4) 0%, rgba(108, 99, 255, 0) 70%);
+            border-radius: 50%;
+            animation: glowPulse 2s infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes glowPulse {
+            from { transform: scale(0.8); opacity: 0.6; }
+            to { transform: scale(1.2); opacity: 0.9; }
+        }
+
+        /* === ONLINE GAME STYLES === */
+        .mode-select {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .mode-card {
+            background-color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 280px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .mode-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .mode-card i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .mode-card h3 {
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .mode-card p {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .room-code {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: var(--primary);
+            margin: 1rem 0;
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .room-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 1.5rem 0;
+        }
+
+        .room-option {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .room-option label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark-gray);
+        }
+
+        .room-option input, .room-option select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .room-option input:focus, .room-option select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .lobby {
+            width: 100%;
+            max-width: 500px;
+            margin: 1rem auto;
+        }
+
+        .player-list {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+        }
+
+        .player-item:last-child {
+            border-bottom: none;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .player-status {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background-color: #e2e8f0;
+            color: var(--dark-gray);
+        }
+
+        .player-status.ready {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .player-status.admin {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* === CUSTOM TASK STYLES === */
+        .task-mode-select {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 2rem 0;
+        }
+
+        .task-mode-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 200px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+        }
+
+        .task-mode-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .task-mode-card.selected {
+            border-color: var(--primary);
+            background-color: rgba(108, 99, 255, 0.05);
+        }
+
+        .task-mode-card i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .task-mode-card h3 {
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .custom-task-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 1rem auto;
+        }
+
+        .custom-task-form {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .task-input-group {
+            margin-bottom: 1rem;
+        }
+
+        .task-input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark-gray);
+        }
+
+        .task-input-group input, .task-input-group textarea, .task-input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .task-input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .task-input-group input:focus, .task-input-group textarea:focus, .task-input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .task-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+
+        .task-list {
+            margin-top: 1.5rem;
+        }
+
+        .task-item {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-item-info {
+            flex: 1;
+        }
+
+        .task-item-type {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .task-item-cell {
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+        }
+
+        .task-item-delete {
+            color: var(--danger);
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .player-task-progress {
+            text-align: center;
+            margin: 1rem 0;
+            font-weight: 600;
+            color: var(--dark-gray);
+        }
+
+        /* === RESPONSIVE DESIGN === */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .player-input-container {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .board {
+                grid-template-columns: repeat(10, 1fr);
+                gap: 2px;
+                padding: 10px;
+            }
+            
+            .cell {
+                font-size: 10px;
+            }
+            
+            .piece {
+                width: 18px;
+                height: 18px;
+                font-size: 0.6rem;
+            }
+            
+            .dice-container {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .dice {
+                font-size: 1.5rem;
+            }
+
+            .mode-select {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .mode-card {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .task-mode-select {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .task-mode-card {
+                width: 100%;
+                max-width: 250px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-title {
+                font-size: 1.8rem;
+            }
+            
+            .player-input-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+            }
+            
+            .modal-content {
+                padding: 1.5rem;
+            }
+
+            .task-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* === UTILITY CLASSES === */
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mt-4 { margin-top: 2rem; }
+
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        .mb-4 { margin-bottom: 2rem; }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <!-- Firebase SDK -->
-  (<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  (<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 </head>
 <body>
-    <div class="container">
-        <!-- SCREEN 1: START MENU -->
-        <div class="screen active" id="start-screen">
-            <div class="game-header">
-                <h1 class="game-title">Ular Tangga</h1>
-                <h2 class="game-subtitle">Truth or Dare</h2>
-                <h2 class="game-subtitle">Powered By HIMABIDA</h2>
-            </div>
-            <div class="card">
-                <img src="ular.jpeg" alt="Game Illustration" style="width: 100%; max-width: 300px; margin: 0 auto 1rem; display: block;">
-                <button id="start-btn" class="btn btn-secondary">
-                    <i class="fas fa-play mr-1"></i> Mulai Game
-                </button>
-            </div>
-        </div>
+    <div class="container">
+        <!-- SCREEN 1: START MENU -->
+        <div class="screen active" id="start-screen">
+            <div class="game-header">
+                <h1 class="game-title">Ular Tangga</h1>
+                <h2 class="game-subtitle">Truth or Dare</h2>
+                <h2 class="game-subtitle">Powered By HIMABIDA</h2>
+            </div>
+            <div class="card">
+                <img src="ular.jpeg" alt="Game Illustration" style="width: 100%; max-width: 300px; margin: 0 auto 1rem; display: block;">
+                <button id="start-btn" class="btn btn-secondary">
+                    <i class="fas fa-play mr-1"></i> Mulai Game
+                </button>
+            </div>
+        </div>
 
-        <!-- SCREEN 2: MODE SELECTION -->
-        <div class="screen" id="mode-screen">
-            <div class="card">
-                <h1 class="text-center">Pilih Mode Permainan</h1>
-                <p class="text-center">Main sendiri atau bersama teman secara online?</p>
-                
-                <div class="mode-select">
-                    <div class="mode-card" id="offline-mode">
-                        <i class="fas fa-user-friends"></i>
-                        <h3>Offline</h3>
-                        <p>Main sendiri dengan teman-teman di satu perangkat</p>
-                    </div>
-                    <div class="mode-card" id="online-mode">
-                        <i class="fas fa-globe"></i>
-                        <h3>Online</h3>
-                        <p>Main bersama teman secara online dari jarak jauh</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-<!-- SCREEN 3: RULES (OFFLINE) -->
-        <div class="screen" id="rules-screen">
-            <div class="card">
-                <h1 class="text-center">Aturan Main</h1>
-                <div class="rules-list">
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-users"></i> </div>
-                            <p>: Pilih jumlah pemain (2-8 orang)</p>
-                    </div>></i> </div>
-                        
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-palette"></i></div>
-                        <p>: Setiap pemain akan dapat pion warna berbeda</p>
-                        
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-microphone"></i></div>
-                        <p><strong>Bilang "MULAI" untuk lempar dadu</strong> (atau klik tombol)</p>
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-snake"></i></div>
-                        <p>Jika mendarat di:</p>
-                        <ul>
-                            <li><span style="color: var(--success);">Tangga (Hijau)</span>: Naik ke posisi spesifik</li>
-                            <li><span style="color: var(--danger);">Ular (Merah)</span>: Turun ke posisi spesifik</li>
-                            <li><span style="color: var(--warning);">Truth/Dare (Kuning)</span>: Pilih tantangan!</li>
-                        </ul>
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-trophy"></i></div>
-                        <p>Pemain pertama yang sampai di kotak 100 menang!</p>
-                    </div>
-                </div>
-                <button id="next-btn" class="btn">
-                    Selanjutnya <i class="fas fa-arrow-right ml-1"></i>
-                </button>
-            </div>
-        </div>
+        <!-- SCREEN 2: MODE SELECTION -->
+        <div class="screen" id="mode-screen">
+            <div class="card">
+                <h1 class="text-center">Pilih Mode Permainan</h1>
+                <p class="text-center">Main sendiri atau bersama teman secara online?</p>
+                
+                <div class="mode-select">
+                    <div class="mode-card" id="offline-mode">
+                        <i class="fas fa-user-friends"></i>
+                        <h3>Offline</h3>
+                        <p>Main sendiri dengan teman-teman di satu perangkat</p>
+                    </div>
+                    <div class="mode-card" id="online-mode">
+                        <i class="fas fa-globe"></i>
+                        <h3>Online</h3>
+                        <p>Main bersama teman secara online dari jarak jauh</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <!-- SCREEN 4: PLAYER COUNT (OFFLINE) -->
-        <div class="screen" id="count-screen">
-            <div class="card">
-                <h1 class="text-center">Jumlah Pemain</h1>
-                <p class="text-center">Pilih jumlah pemain:</p>
-                <div class="player-count-buttons">
-                    <button class="count-btn btn btn-outline" data-count="2">
-                        <i class="fas fa-user-friends mr-1"></i> 2 Pemain
-                    </button>
-                    <button class="count-btn btn btn-outline" data-count="3">
-                        <i class="fas fa-users mr-1"></i> 3 Pemain
-                    </button>
-                    <button class="count-btn btn btn-outline" data-count="4">
-                        <i class="fas fa-users mr-1"></i> 4 Pemain
-                    </button>
-                    <button class="count-btn btn btn-outline" data-count="5">
-                        <i class="fas fa-users mr-1"></i> 5 Pemain
-                    </button>
-                    <button class="count-btn btn btn-outline" data-count="6">
-                        <i class="fas fa-users mr-1"></i> 6 Pemain
-                    </button>
-                    <button class="count-btn btn btn-outline" data-count="7">
-                        <i class="fas fa-users mr-1"></i> 7 Pemain
-                    </button>
-                    <button class="count-btn btn btn-outline" data-count="8">
-                        <i class="fas fa-users mr-1"></i> 8 Pemain
-                    </button>
-                </div>
-            </div>
-        </div>
+        <!-- SCREEN 3: RULES (OFFLINE) -->
+        <div class="screen" id="rules-screen">
+            <div class="card">
+                <h1 class="text-center">Aturan Main</h1>
+                <div class="rules-list">
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-users"></i> </div>
+                            <p>: Pilih jumlah pemain (2-8 orang)</p>
+                    </div>></i> </div>
+                        
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-palette"></i></div>
+                        <p>: Setiap pemain akan dapat pion warna berbeda</p>
+                        
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-microphone"></i></div>
+                        <p><strong>Bilang "MULAI" untuk lempar dadu</strong> (atau klik tombol)</p>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-snake"></i></div>
+                        <p>Jika mendarat di:</p>
+                        <ul>
+                            <li><span style="color: var(--success);">Tangga (Hijau)</span>: Naik ke posisi spesifik</li>
+                            <li><span style="color: var(--danger);">Ular (Merah)</span>: Turun ke posisi spesifik</li>
+                            <li><span style="color: var(--warning);">Truth/Dare (Kuning)</span>: Pilih tantangan!</li>
+                        </ul>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-trophy"></i></div>
+                        <p>Pemain pertama yang sampai di kotak 100 menang!</p>
+                    </div>
+                </div>
+                <button id="next-btn" class="btn">
+                    Selanjutnya <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
 
-        <!-- SCREEN 5: PLAYER NAMES (OFFLINE) -->
-        <div class="screen" id="names-screen">
-            <div class="card">
-                <h1 class="text-center">Input Nama Pemain</h1>
-                <div id="player-inputs" class="player-input-container"></div>
-                <button id="start-game-btn" class="btn">
-                    <i class="fas fa-gamepad mr-1"></i> Lanjut
-                </button>
-            </div>
-        </div>
-<!-- SCREEN 5.5: TASK MODE SELECTION (OFFLINE) -->
+        <!-- SCREEN 4: PLAYER COUNT (OFFLINE) -->
+        <div class="screen" id="count-screen">
+            <div class="card">
+                <h1 class="text-center">Jumlah Pemain</h1>
+                <p class="text-center">Pilih jumlah pemain:</p>
+                <div class="player-count-buttons">
+                    <button class="count-btn btn btn-outline" data-count="2">
+                        <i class="fas fa-user-friends mr-1"></i> 2 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="3">
+                        <i class="fas fa-users mr-1"></i> 3 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="4">
+                        <i class="fas fa-users mr-1"></i> 4 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="5">
+                        <i class="fas fa-users mr-1"></i> 5 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="6">
+                        <i class="fas fa-users mr-1"></i> 6 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="7">
+                        <i class="fas fa-users mr-1"></i> 7 Pemain
+                    </button>
+                    <button class="count-btn btn btn-outline" data-count="8">
+                        <i class="fas fa-users mr-1"></i> 8 Pemain
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 5: PLAYER NAMES (OFFLINE) -->
+        <div class="screen" id="names-screen">
+            <div class="card">
+                <h1 class="text-center">Input Nama Pemain</h1>
+                <div id="player-inputs" class="player-input-container"></div>
+                <button id="start-game-btn" class="btn">
+                    <i class="fas fa-gamepad mr-1"></i> Lanjut
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 5.5: TASK MODE SELECTION (OFFLINE) -->
         <div class="screen" id="task-mode-screen">
             <div class="card">
                 <h1 class="text-center">Pilih Mode Tantangan</h1>
@@ -1180,254 +1185,255 @@
                 <p class="text-center">Buat room baru atau gabung room yang sudah ada</p>
                 
                 <div class="mode-select">
-<div class="mode-card" id="create-room-btn">
-                        <i class="fas fa-plus-circle"></i>
-                        <h3>Buat Room</h3>
-                        <p>Buat room baru dan undang teman untuk bergabung</p>
-                    </div>
-                    <div class="mode-card" id="join-room-btn">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <h3>Gabung Room</h3>
-                        <p>Gabung ke room yang sudah ada dengan kode room</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    <div class="mode-card" id="create-room-btn">
+                        <i class="fas fa-plus-circle"></i>
+                        <h3>Buat Room</h3>
+                        <p>Buat room baru dan undang teman untuk bergabung</p>
+                    </div>
+                    <div class="mode-card" id="join-room-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <h3>Gabung Room</h3>
+                        <p>Gabung ke room yang sudah ada dengan kode room</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <!-- SCREEN 7: CREATE ROOM -->
-        <div class="screen" id="create-room-screen">
-            <div class="card">
-                <h1 class="text-center">Buat Room Baru</h1>
-                
-                <div class="room-options">
-                    <div class="room-option">
-                        <label for="player-name">Nama Anda</label>
-                        <input type="text" id="host-name" placeholder="Masukkan nama Anda">
-                    </div>
-                    <div class="room-option">
-                        <label for="max-players">Jumlah Pemain</label>
-                        <select id="max-players">
-                            <option value="2">2 Pemain</option>
-                            <option value="3">3 Pemain</option>
-                            <option value="4">4 Pemain</option>
-                            <option value="5">5 Pemain</option>
-                            <option value="6">6 Pemain</option>
-                            <option value="7">7 Pemain</option>
-                            <option value="8">8 Pemain</option>
-                        </select>
-                    </div>
-                    <div class="room-option">
-                        <label for="task-mode">Mode Tantangan</label>
-                        <select id="task-mode">
-                            <option value="system">System (Tantangan dari game)</option>
-                            <option value="manual">Manual (Buat tantangan sendiri)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <button id="create-room-confirm" class="btn">
-                    <i class="fas fa-plus-circle mr-1"></i> Buat Room
-                </button>
-            </div>
-        </div>
+        <!-- SCREEN 7: CREATE ROOM -->
+        <div class="screen" id="create-room-screen">
+            <div class="card">
+                <h1 class="text-center">Buat Room Baru</h1>
+                
+                <div class="room-options">
+                    <div class="room-option">
+                        <label for="player-name">Nama Anda</label>
+                        <input type="text" id="host-name" placeholder="Masukkan nama Anda">
+                    </div>
+                    <div class="room-option">
+                        <label for="max-players">Jumlah Pemain</label>
+                        <select id="max-players">
+                            <option value="2">2 Pemain</option>
+                            <option value="3">3 Pemain</option>
+                            <option value="4">4 Pemain</option>
+                            <option value="5">5 Pemain</option>
+                            <option value="6">6 Pemain</option>
+                            <option value="7">7 Pemain</option>
+                            <option value="8">8 Pemain</option>
+                        </select>
+                    </div>
+                    <div class="room-option">
+                        <label for="task-mode">Mode Tantangan</label>
+                        <select id="task-mode">
+                            <option value="system">System (Tantangan dari game)</option>
+                            <option value="manual">Manual (Buat tantangan sendiri)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button id="create-room-confirm" class="btn">
+                    <i class="fas fa-plus-circle mr-1"></i> Buat Room
+                </button>
+            </div>
+        </div>
 
-        <!-- SCREEN 8: ROOM LOBBY (HOST) -->
-        <div class="screen" id="host-lobby-screen">
-            <div class="card">
-                <h1 class="text-center">Room Anda</h1>
-                <p class="text-center">Bagikan kode ini ke teman Anda:</p>
-                <div class="room-code" id="room-code-display">ABCD12</div>
-                
-                <div class="lobby">
-                    <h3><i class="fas fa-users mr-1"></i> Pemain di Room</h3>
-                    <div class="player-list" id="host-player-list">
-                        <!-- Player list will be populated here -->
-                    </div>
-                </div>
-                
-                <div id="host-custom-tasks-section" style="display: none;">
-                    <h3><i class="fas fa-tasks mr-1"></i> Tantangan Kustom</h3>
-                    <p class="text-center">Silakan buat tantangan untuk permainan</p>
-                    <button id="host-setup-tasks-btn" class="btn btn-small">
-                        <i class="fas fa-edit mr-1"></i> Buat Tantangan
-                    </button>
-                </div>
-                
-                <p class="text-center">Menunggu pemain lain bergabung...</p>
-                <button id="host-start-btn" class="btn" disabled>
-                    <i class="fas fa-play mr-1"></i> Mulai Game
-                </button>
-            </div>
-        </div>
+        <!-- SCREEN 8: ROOM LOBBY (HOST) -->
+        <div class="screen" id="host-lobby-screen">
+            <div class="card">
+                <h1 class="text-center">Room Anda</h1>
+                <p class="text-center">Bagikan kode ini ke teman Anda:</p>
+                <div class="room-code" id="room-code-display">ABCD12</div>
+                
+                <div class="lobby">
+                    <h3><i class="fas fa-users mr-1"></i> Pemain di Room</h3>
+                    <div class="player-list" id="host-player-list">
+                        <!-- Player list will be populated here -->
+                    </div>
+                </div>
+                
+                <div id="host-custom-tasks-section" style="display: none;">
+                    <h3><i class="fas fa-tasks mr-1"></i> Tantangan Kustom</h3>
+                    <p class="text-center">Silakan buat tantangan untuk permainan</p>
+                    <button id="host-setup-tasks-btn" class="btn btn-small">
+                        <i class="fas fa-edit mr-1"></i> Buat Tantangan
+                    </button>
+                </div>
+                
+                <p class="text-center">Menunggu pemain lain bergabung...</p>
+                <button id="host-start-btn" class="btn" disabled>
+                    <i class="fas fa-play mr-1"></i> Mulai Game
+                </button>
+            </div>
+        </div>
 
-        <!-- SCREEN 9: JOIN ROOM -->
-<div class="screen" id="join-room-screen">
-            <div class="card">
-                <h1 class="text-center">Gabung Room</h1>
-                
-                <div class="room-options">
-                    <div class="room-option">
-                        <label for="join-player-name">Nama Anda</label>
-                        <input type="text" id="join-player-name" placeholder="Masukkan nama Anda">
-                    </div>
-                    <div class="room-option">
-                        <label for="room-code">Kode Room</label>
-                        <input type="text" id="room-code" placeholder="Masukkan kode room">
-                    </div>
-                </div>
-                
-                <button id="join-room-confirm" class="btn">
-                    <i class="fas fa-sign-in-alt mr-1"></i> Gabung Room
-                </button>
-            </div>
-        </div>
+        <!-- SCREEN 9: JOIN ROOM -->
+        <div class="screen" id="join-room-screen">
+            <div class="card">
+                <h1 class="text-center">Gabung Room</h1>
+                
+                <div class="room-options">
+                    <div class="room-option">
+                        <label for="join-player-name">Nama Anda</label>
+                        <input type="text" id="join-player-name" placeholder="Masukkan nama Anda">
+                    </div>
+                    <div class="room-option">
+                        <label for="room-code">Kode Room</label>
+                        <input type="text" id="room-code" placeholder="Masukkan kode room">
+                    </div>
+                </div>
+                
+                <button id="join-room-confirm" class="btn">
+                    <i class="fas fa-sign-in-alt mr-1"></i> Gabung Room
+                </button>
+            </div>
+        </div>
 
-        <!-- SCREEN 10: ROOM LOBBY (GUEST) -->
-        <div class="screen" id="guest-lobby-screen">
-            <div class="card">
-                <h1 class="text-center">Room</h1>
-                <p class="text-center">Kode Room: <span class="room-code" id="guest-room-code">ABCD12</span></p>
-                
-                <div class="lobby">
-                    <h3><i class="fas fa-users mr-1"></i> Pemain di Room</h3>
-                    <div class="player-list" id="guest-player-list">
-                        <!-- Player list will be populated here -->
-                    </div>
-                </div>
-                <!-- TOMBOL READY BARU DITAMBAHKAN DI SINI -->
-        <button id="guest-ready-btn" class="btn">
-            <i class="fas fa-check mr-1"></i> Saya Sudah Siap
-        </button>
+        <!-- SCREEN 10: ROOM LOBBY (GUEST) -->
+        <div class="screen" id="guest-lobby-screen">
+            <div class="card">
+                <h1 class="text-center">Room</h1>
+                <p class="text-center">Kode Room: <span class="room-code" id="guest-room-code">ABCD12</span></p>
+                
+                <div class="lobby">
+                    <h3><i class="fas fa-users mr-1"></i> Pemain di Room</h3>
+                    <div class="player-list" id="guest-player-list">
+                        <!-- Player list will be populated here -->
+                    </div>
+                </div>
+                <!-- TOMBOL READY BARU DITAMBAHKAN DI SINI -->
+        <button id="guest-ready-btn" class="btn">
+            <i class="fas fa-check mr-1"></i> Saya Sudah Siap
+        </button>
 
-                
-                <p class="text-center">Menunggu admin memulai game...</p>
-            </div>
-        </div>
+                
+                <p class="text-center">Menunggu admin memulai game...</p>
+            </div>
+        </div>
 
-        <!-- SCREEN 11: ONLINE RULES -->
-        <div class="screen" id="online-rules-screen">
-            <div class="card">
-                <h1 class="text-center">Aturan Main</h1>
-                <div class="rules-list">
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-users"></i></div>
-                        <p>Game akan berjalan secara bergiliran</p>
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-palette"></i></div>
-                        <p>Setiap pemain akan dapat pion warna berbeda</p>
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-microphone"></i></div>
-                        <p><strong>Bilang "MULAI" untuk lempar dadu</strong> (atau klik tombol)</p>
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-snake"></i></div>
-                        <p>Jika mendarat di:</p>
-                        <ul>
-                            <li><span style="color: var(--success);">Tangga (Hijau)</span>: Naik ke posisi spesifik</li>
-                            <li><span style="color: var(--danger);">Ular (Merah)</span>: Turun ke posisi spesifik</li>
-                            <li><span style="color: var(--warning);">Truth/Dare (Kuning)</span>: Pilih tantangan!</li>
-                        </ul>
-                    </div>
-                    <div class="rule-item">
-                        <div class="rule-icon"><i class="fas fa-trophy"></i></div>
-                        <p>Pemain pertama yang sampai di kotak 100 menang!</p>
-                    </div>
-                </div>
-                <button id="online-start-btn" class="btn">
-                    <i class="fas fa-play mr-1"></i> Mulai Game
-                </button>
-            </div>
-        </div>
-<!-- SCREEN 12: GAME BOARD (FOR BOTH OFFLINE AND ONLINE) -->
-        <div class="screen" id="game-screen">
-            <div class="game-header">
-                <h1 class="game-title">Ular Tangga</h1>
-                <h2 class="game-subtitle">Truth or Dare Edition</h2>
-                <div id="online-status" style="display: none;">
-                    <span id="room-code-badge" class="player-status admin"></span>
-                    <span id="connection-status" class="player-status ready"></span>
-                </div>
-            </div>
-            
-            <div class="scoreboard">
-                <h3><i class="fas fa-trophy mr-1"></i> Scoreboard</h3>
-                <div id="score-list"></div>
-            </div>
-            
-            <div class="board-container">
-                <div class="board" id="game-board"></div>
-            </div>
-            
-            <div class="current-turn" id="current-turn">
-                <div class="current-turn-indicator"></div>
-                <span id="turn-text">Giliran: Player 1</span>
-            </div>
-            
-            <div class="controls">
-                <button id="roll-btn" class="btn btn-secondary">
-                    <i class="fas fa-dice mr-1"></i> Lempar Dadu
-                </button>
-                <div class="dice-container">
-                    <div class="dice" id="dice">?</div>
-                </div>
-            </div>
+        <!-- SCREEN 11: ONLINE RULES -->
+        <div class="screen" id="online-rules-screen">
+            <div class="card">
+                <h1 class="text-center">Aturan Main</h1>
+                <div class="rules-list">
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-users"></i></div>
+                        <p>Game akan berjalan secara bergiliran</p>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-palette"></i></div>
+                        <p>Setiap pemain akan dapat pion warna berbeda</p>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-microphone"></i></div>
+                        <p><strong>Bilang "MULAI" untuk lempar dadu</strong> (atau klik tombol)</p>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-snake"></i></div>
+                        <p>Jika mendarat di:</p>
+                        <ul>
+                            <li><span style="color: var(--success);">Tangga (Hijau)</span>: Naik ke posisi spesifik</li>
+                            <li><span style="color: var(--danger);">Ular (Merah)</span>: Turun ke posisi spesifik</li>
+                            <li><span style="color: var(--warning);">Truth/Dare (Kuning)</span>: Pilih tantangan!</li>
+                        </ul>
+                    </div>
+                    <div class="rule-item">
+                        <div class="rule-icon"><i class="fas fa-trophy"></i></div>
+                        <p>Pemain pertama yang sampai di kotak 100 menang!</p>
+                    </div>
+                </div>
+                <button id="online-start-btn" class="btn">
+                    <i class="fas fa-play mr-1"></i> Mulai Game
+                </button>
+            </div>
+        </div>
 
-            <!-- VOICE CONTROL -->
-            <div class="voice-control">
-                <div class="mic-btn" id="mic-btn">
-                    <i class="fas fa-microphone"></i>
-                </div>
-                <p class="mic-status" id="mic-status">Klik mic atau bilang "MULAI"</p>
-            </div>
-        </div>
+        <!-- SCREEN 12: GAME BOARD (FOR BOTH OFFLINE AND ONLINE) -->
+        <div class="screen" id="game-screen">
+            <div class="game-header">
+                <h1 class="game-title">Ular Tangga</h1>
+                <h2 class="game-subtitle">Truth or Dare Edition</h2>
+                <div id="online-status" style="display: none;">
+                    <span id="room-code-badge" class="player-status admin"></span>
+                    <span id="connection-status" class="player-status ready"></span>
+                </div>
+            </div>
+            
+            <div class="scoreboard">
+                <h3><i class="fas fa-trophy mr-1"></i> Scoreboard</h3>
+                <div id="score-list"></div>
+            </div>
+            
+            <div class="board-container">
+                <div class="board" id="game-board"></div>
+            </div>
+            
+            <div class="current-turn" id="current-turn">
+                <div class="current-turn-indicator"></div>
+                <span id="turn-text">Giliran: Player 1</span>
+            </div>
+            
+            <div class="controls">
+                <button id="roll-btn" class="btn btn-secondary">
+                    <i class="fas fa-dice mr-1"></i> Lempar Dadu
+                </button>
+                <div class="dice-container">
+                    <div class="dice" id="dice">?</div>
+                </div>
+            </div>
 
-        <!-- MODAL: TRUTH/DARE -->
-        <div class="modal" id="truth-dare-modal" style="display: none;">
-            <div class="modal-content">
-                <div class="winner-glow"></div>
-                <h2>PILIH:</h2>
-                <div class="modal-buttons">
-                    <button id="truth-btn" class="btn">
-                        <i class="fas fa-comment-dots mr-1"></i> Truth
-                    </button>
-                    <button id="dare-btn" class="btn btn-secondary">
-                        <i class="fas fa-running mr-1"></i> Dare
-                    </button>
-                </div>
-                <div id="task-result"></div>
-                <button id="continue-btn" class="btn" style="display: none; margin-top: 1rem;">
-                    Lanjutkan <i class="fas fa-arrow-right ml-1"></i>
-                </button>
-            </div>
-        </div>
+            <!-- VOICE CONTROL -->
+            <div class="voice-control">
+                <div class="mic-btn" id="mic-btn">
+                    <i class="fas fa-microphone"></i>
+                </div>
+                <p class="mic-status" id="mic-status">Klik mic atau bilang "MULAI"</p>
+            </div>
+        </div>
 
-        <!-- MODAL: WINNER -->
-        <div class="modal" id="winner-modal" style="display:none">
-            <div class="modal-content">
-                <div class="winner-glow"></div>
-                <h2><i class="fas fa-trophy mr-1"></i> Selamat!</h2>
-                <p id="winner-name" style="font-size: 2rem; font-weight: bold; margin: 1rem 0;"></p>
-                <button id="play-again-btn" class="btn btn-secondary">
-                    <i class="fas fa-redo mr-1"></i> Main Lagi
-                </button>
-            </div>
-        </div>
-    </div>
-  <div id="game-container"></div>
-  <script src="app.js"></script>
+        <!-- MODAL: TRUTH/DARE -->
+        <div class="modal" id="truth-dare-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="winner-glow"></div>
+                <h2>PILIH:</h2>
+                <div class="modal-buttons">
+                    <button id="truth-btn" class="btn">
+                        <i class="fas fa-comment-dots mr-1"></i> Truth
+                    </button>
+                    <button id="dare-btn" class="btn btn-secondary">
+                        <i class="fas fa-running mr-1"></i> Dare
+                    </button>
+                </div>
+                <div id="task-result"></div>
+                <button id="continue-btn" class="btn" style="display: none; margin-top: 1rem;">
+                    Lanjutkan <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL: WINNER -->
+        <div class="modal" id="winner-modal" style="display:none">
+            <div class="modal-content">
+                <div class="winner-glow"></div>
+                <h2><i class="fas fa-trophy mr-1"></i> Selamat!</h2>
+                <p id="winner-name" style="font-size: 2rem; font-weight: bold; margin: 1rem 0;"></p>
+                <button id="play-again-btn" class="btn btn-secondary">
+                    <i class="fas fa-redo mr-1"></i> Main Lagi
+                </button>
+            </div>
+        </div>
+    </div>
+  <div id="game-container"></div>
+
 <script>
 
 // === FIREBASE INITIALIZATION ===
 const firebaseConfig = {
-  apiKey: "AIzaSyAaYFKvIjfMfYbv5rZ6X5MZrLDtgj5QOEc",
-  authDomain: "ulartangga-online.firebaseapp.com",
-  databaseURL: "https://ulartangga-online-default-rtdb.firebaseio.com",
-  projectId: "ulartangga-online",
-  storageBucket: "ulartangga-online.firebasestorage.app",
-  messagingSenderId: "344900787531",
-  appId: "1:344900787531:web:d24f270489c1fdff8d1cce"
+  apiKey: "AIzaSyAaYFKvIjfMfYbv5rZ6X5MZrLDtgj5QOEc",
+  authDomain: "ulartangga-online.firebaseapp.com",
+  databaseURL: "https://ulartangga-online-default-rtdb.firebaseio.com",
+  projectId: "ulartangga-online",
+  storageBucket: "ulartangga-online.firebasestorage.app",
+  messagingSenderId: "344900787531",
+  appId: "1:344900787531:web:d24f270489c1fdff8d1cce"
 };
 
 // Initialize Firebase
@@ -1436,15 +1442,16 @@ const database = firebase.database();
 
 // === GAME DATA ===
 const colors = [
-    '#FF6584', // Merah muda
-    '#6C63FF', // Ungu
-    '#48BB78', // Hijau
-    '#F6AD55', // Oranye
-    '#9F7AEA', // Lavender
-    '#4299E1', // Biru
-    '#ED8936', // Jingga
-    '#667EEA'  // Biru ungu
+    '#FF6584', // Merah muda
+    '#6C63FF', // Ungu
+    '#48BB78', // Hijau
+    '#F6AD55', // Oranye
+    '#9F7AEA', // Lavender
+    '#4299E1', // Biru
+    '#ED8936', // Jingga
+    '#667EEA'  // Biru ungu
 ];
+
 // Posisi ular & tangga
 const snakes = {
     57: 34, // Turun dari 57 ke 34
@@ -1579,6 +1586,7 @@ function joinRoom(playerName, code) {
         return roomCode;
     });
 }
+
 function setupRoomListeners() {
     // Listener untuk update data room
     roomRef.on('value', (snapshot) => {
@@ -1691,9 +1699,9 @@ function handleOnlineSnakesLadders(player) {
             return checkOnlineTruthDare();
         }
     });
-    }
+}
 
-    function movePlayerToPosition(player, targetPos, direction) {
+function movePlayerToPosition(player, targetPos, direction) {
     return new Promise((resolve) => {
         let currentPos = positions[player.name];
         
@@ -1744,13 +1752,13 @@ function showCustomTaskModal(cellNumber) {
     const cellTasks = customTasks[cellNumber];
     const randomTask = cellTasks[Math.floor(Math.random() * cellTasks.length)];
     
-    document.getElementById('task-result').innerHTML = 
+    document.getElementById('task-result').innerHTML = `
         <div class="task-card">
             <h3>${randomTask.type.toUpperCase()}</h3>
             <p>${randomTask.text}</p>
             <p class="task-item-cell">Dibuat oleh: ${randomTask.player || 'Sistem'}</p>
         </div>
-    ;
+    `;
     
     document.getElementById('truth-btn').style.display = 'none';
     document.getElementById('dare-btn').style.display = 'none';
@@ -1800,6 +1808,7 @@ function nextPlayer() {
         return Promise.resolve();
     }
 }
+
 function startGame() {
     if (!roomCode) return Promise.reject("No room code");
     
@@ -1918,7 +1927,8 @@ function onPlayerUpdated(player) {
 }
 
 function onGameStarted() {
-    roomRef.once('value').then(snapshot => {const roomData = snapshot.val();
+    roomRef.once('value').then(snapshot => {
+        const roomData = snapshot.val();
         if (!roomData || roomData.status !== "playing") return;
         
         // Initialize game state
@@ -2034,7 +2044,8 @@ function initGame() {
         }
         
         createRoom(name).then(code => {
-            document.getElementById('room-code-display').textContent = code;switchScreen('host-lobby-screen');
+            document.getElementById('room-code-display').textContent = code;
+            switchScreen('host-lobby-screen');
             
             // Show custom task section if in manual mode
             if (taskMode === 'manual') {
@@ -2144,6 +2155,7 @@ function initGame() {
     document.getElementById('next-btn').onclick = function() {
         switchScreen('count-screen');
     };
+
     const countButtons = document.querySelectorAll('.count-btn');
     countButtons.forEach(function(button) {
         button.onclick = function() {
@@ -2248,7 +2260,7 @@ function initVoiceControl() {
         const last = event.results.length - 1;
         const command = event.results[last][0].transcript.trim().toUpperCase();
         
-        if (command.includes("MULAI")  command.includes("LEMPAR DADU")  command.includes("JALAN") || command.includes("SEPI GO")) {
+        if (command.includes("MULAI") || command.includes("LEMPAR DADU") || command.includes("JALAN") || command.includes("SEPI GO")) {
             document.getElementById('mic-status').textContent = "Terdeteksi: " + command;
             rollDice();
         }
@@ -2260,8 +2272,7 @@ function initVoiceControl() {
         const micBtn = document.getElementById('mic-btn');
         
         micBtn.classList.remove('active');
-        
-    micBtn.classList.add('error');
+        micBtn.classList.add('error');
         
         switch(event.error) {
             case 'not-allowed':
@@ -2388,7 +2399,8 @@ function updateStartButton() {
         startBtn.disabled = true;
     }
 }
-    // === GAME LOGIC ===
+
+// === GAME LOGIC ===
 function startOnlineGame() {
     if (isHost) {
         startGame().catch(error => {
@@ -2506,8 +2518,7 @@ function checkTruthDare() {
             
             document.getElementById('task-result').innerHTML = `
                 <div class="task-card">
-
-                <h3>${randomTask.type.toUpperCase()}</h3>
+                    <h3>${randomTask.type.toUpperCase()}</h3>
                     <p>${randomTask.text}</p>
                     <p class="task-item-cell">Dibuat oleh: ${randomTask.player || 'Sistem'}</p>
                 </div>
@@ -2602,10 +2613,10 @@ function updatePieces() {
 
         if (targetCellIndex !== -1 && cells[targetCellIndex]) {
             const piece = document.createElement('div');
-piece.className = 'piece';
+            piece.className = 'piece';
             piece.style.backgroundColor = player.color;
             piece.textContent = player.number;
-            piece.title = ${player.name} (Posisi: ${position});
+            piece.title = `${player.name} (Posisi: ${position})`;
             cells[targetCellIndex].appendChild(piece);
         }
     }
@@ -2650,7 +2661,7 @@ function updateCurrentTurn() {
     if (!player) return;
     
     const turnDisplay = document.getElementById('current-turn');
-    document.getElementById('turn-text').textContent = Giliran: ${player.name};
+    document.getElementById('turn-text').textContent = `Giliran: ${player.name}`;
     turnDisplay.style.color = player.color;
     document.querySelector('.current-turn-indicator').style.backgroundColor = player.color;
 }
@@ -2695,12 +2706,12 @@ function showTask(type) {
     const tasksArray = tasks[type];
     const randomTask = tasksArray[Math.floor(Math.random() * tasksArray.length)];
 
-    taskResult.innerHTML = 
+    taskResult.innerHTML = `
         <div class="task-card">
             <h3>${type.toUpperCase()}</h3>
             <p>${randomTask}</p>
         </div>
-    ;
+    `;
 
     document.getElementById('continue-btn').style.display = 'block';
     document.getElementById('truth-btn').style.display = 'none';
@@ -2709,7 +2720,6 @@ function showTask(type) {
 
 function continueGame() {
     document.getElementById('truth-dare-modal').style.display = 'none';
-
     document.getElementById('task-result').innerHTML = '';
     document.getElementById('continue-btn').style.display = 'none';
     document.getElementById('truth-btn').style.display = 'inline-block';
@@ -2823,7 +2833,8 @@ function addCustomTask() {
         alert('Anda sudah membuat 2 Dare! Tidak bisa menambah lagi.');
         return;
     }
-const task = {
+
+    const task = {
         type,
         text,
         cell,
@@ -2873,7 +2884,7 @@ function updateTaskListUI() {
         
         const taskCell = document.createElement('div');
         taskCell.className = 'task-item-cell';
-        taskCell.textContent = Kotak ${task.cell};
+        taskCell.textContent = `Kotak ${task.cell}`;
         
         taskInfo.appendChild(taskType);
         taskInfo.appendChild(taskText);
@@ -2958,7 +2969,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 </body>
-</html>
-    
-            
-    
+    </html>
