@@ -1928,32 +1928,30 @@ function leaveRoom() {
 // === CALLBACK FUNCTIONS ===
 function updateGameUI(roomData) {
     if (!roomData) return;
-    
+
     // Update player list
     const playersData = roomData.players || {};
     const playerList = isHost ? 
         document.getElementById('host-player-list') : 
         document.getElementById('guest-player-list');
-        
+
     playerList.innerHTML = '';
-    
+
     let readyCount = 0;
     let tasksCompletedCount = 0;
     Object.keys(playersData).forEach(id => {
         const player = playersData[id];
-        const statusText = player.tasksCompleted ? 
-            (player.ready ? 'Ready' : 'Tasks Done') : 
-            'Waiting';
+        const statusText = player.ready ? 'Ready' : (player.tasksCompleted ? 'Tasks Done' : 'Waiting');
         addPlayerToList(player.name, id, id === roomData.host, player.tasksCompleted, statusText);
         if (player.ready) readyCount++;
         if (player.tasksCompleted) tasksCompletedCount++;
     });
-    
+
     // Update start button for host
     if (isHost) {
         const startBtn = document.getElementById('host-start-btn');
         const totalPlayers = Object.keys(playersData).length;
-        
+
         // Enable start button if:
         // 1. Game status is "waiting"
         // 2. At least 2 players
@@ -2143,7 +2141,7 @@ document.getElementById('guest-setup-tasks-btn').onclick = function() {
     roomRef.child('players').once('value').then(snapshot => {
         const playersData = snapshot.val();
         players = [];
-        
+
         Object.keys(playersData).forEach((id, index) => {
             const player = playersData[id];
             players.push({
@@ -2154,8 +2152,17 @@ document.getElementById('guest-setup-tasks-btn').onclick = function() {
             });
             positions[player.name] = player.position;
         });
-        
-        setupCustomTasks();
+
+        // Periksa apakah guest sudah selesai membuat tantangan
+        roomRef.child('players/' + myPlayerId).once('value').then(playerSnapshot => {
+            const player = playerSnapshot.val();
+            if (!player.tasksCompleted) {
+                setupCustomTasks();
+            } else {
+                alert("Anda sudah selesai membuat tantangan!");
+                switchScreen('guest-lobby-screen');
+            }
+        });
     });
 };
 
@@ -2197,7 +2204,8 @@ document.getElementById('guest-setup-tasks-btn').onclick = function() {
             switchScreen('online-options-screen');
         });
     };
-document.getElementById('guest-ready-btn').onclick = function() {
+
+    document.getElementById('guest-ready-btn').onclick = function() {
     if (!isHost && roomRef && myPlayerId) {
         roomRef.once('value').then(snapshot => {
             const roomData = snapshot.val();
@@ -2209,22 +2217,28 @@ document.getElementById('guest-ready-btn').onclick = function() {
                         alert("Silakan buat tantangan terlebih dahulu!");
                         return;
                     }
-                    return roomRef.child('players/' + myPlayerId + '/ready').set(true);
+                    return roomRef.child('players/' + myPlayerId).update({
+                        ready: true,
+                        tasksCompleted: true
+                    });
                 });
             } else {
                 // Mode system: langsung set ready
-                return roomRef.child('players/' + myPlayerId + '/ready').set(true);
+                return roomRef.child('players/' + myPlayerId).update({
+                    ready: true
+                });
             }
         }).then(() => {
             console.log(`Pemain ${myPlayerId} berhasil set ready`);
             alert("Status Anda sudah siap! Menunggu host memulai game...");
+            // Perbarui UI secara langsung untuk mencerminkan status
+            document.getElementById('guest-ready-btn').disabled = true;
         }).catch(error => {
             console.error("Gagal set ready:", error);
             alert("Error: " + error.message);
         });
     }
 };
-    
 
     // Host starts the game
     document.getElementById('host-start-btn').onclick = function() {
@@ -2467,41 +2481,45 @@ function addPlayerToList(name, id, isAdmin = false, tasksCompleted = false, stat
     const playerList = isHost ? 
         document.getElementById('host-player-list') : 
         document.getElementById('guest-player-list');
-        
+
     // Remove existing player if any
     const existingPlayer = document.getElementById('player-' + id);
     if (existingPlayer) {
         existingPlayer.remove();
     }
-    
+
     const playerItem = document.createElement('div');
     playerItem.className = 'player-item';
     playerItem.id = 'player-' + id;
-    
+
     const playerInfo = document.createElement('div');
     playerInfo.className = 'player-info';
-    
+
     const playerAvatar = document.createElement('div');
     playerAvatar.className = 'player-avatar';
     playerAvatar.textContent = name.charAt(0).toUpperCase();
     playerAvatar.style.backgroundColor = colors[playerList.children.length % colors.length];
-    
+
     const playerName = document.createElement('span');
     playerName.textContent = name;
-    
+
     const playerStatus = document.createElement('div');
     playerStatus.className = 'player-status';
-    playerStatus.textContent = isAdmin ? 'Admin' : statusText;
+    playerStatus.textContent = isAdmin ? 'Admin' : (statusText === 'Ready' ? 'Ready' : tasksCompleted ? 'Tasks Done' : 'Waiting');
     if (isAdmin) playerStatus.classList.add('admin');
-    if (statusText === 'Ready') playerStatus.classList.add('ready');
-    else if (statusText === 'Tasks Done') playerStatus.style.backgroundColor = '#FFD700'; // Warna kuning untuk Tasks Done
-    
+    if (statusText === 'Ready') {
+        playerStatus.classList.add('ready');
+        playerStatus.style.backgroundColor = 'var(--success)';
+    } else if (statusText === 'Tasks Done') {
+        playerStatus.style.backgroundColor = '#FFD700';
+    }
+
     playerInfo.appendChild(playerAvatar);
     playerInfo.appendChild(playerName);
     playerItem.appendChild(playerInfo);
     playerItem.appendChild(playerStatus);
     playerList.appendChild(playerItem);
-    
+
     if (isHost) {
         updateStartButton();
     }
@@ -3087,10 +3105,14 @@ function removeTask(index) {
         roomRef.child('players/' + myPlayerId + '/customTasks').set(playerTasksData)
             .then(() => {
                 console.log(`Berhasil menyimpan customTasks untuk ${myPlayerId}`);
-                return roomRef.child('players/' + myPlayerId + '/tasksCompleted').set(true);
+                // Set tasksCompleted dan ready untuk guest
+                return roomRef.child('players/' + myPlayerId).update({
+                    tasksCompleted: true,
+                    ready: true // Otomatis set ready untuk guest
+                });
             })
             .then(() => {
-                console.log(`Berhasil set tasksCompleted untuk ${myPlayerId}`);
+                console.log(`Berhasil set tasksCompleted dan ready untuk ${myPlayerId}`);
                 playerTasks = [];
                 if (isHost) {
                     console.log("Mengalihkan ke host-lobby-screen");
@@ -3098,7 +3120,7 @@ function removeTask(index) {
                 } else {
                     console.log("Mengalihkan ke guest-lobby-screen");
                     switchScreen('guest-lobby-screen');
-                    document.getElementById('guest-ready-btn').disabled = false; // Aktifkan tombol ready untuk guest
+                    document.getElementById('guest-ready-btn').disabled = true; // Nonaktifkan tombol ready setelah selesai
                 }
             })
             .catch(error => {
@@ -3106,21 +3128,26 @@ function removeTask(index) {
                 alert("Gagal menyimpan tantangan: " + error.message);
             });
     } else {
-        // Logika untuk mode offline (mengembalikan alur asli)
+        // Mode offline
         const playerName = players[currentTaskPlayer].name;
-        
+
+        // Simpan tantangan pemain saat ini
+        if (!customTasks[playerName]) {
+            customTasks[playerName] = [];
+        }
         customTasks[playerName] = [...playerTasks];
-        warningCells.push(...playerTasks.map(task => task.cell));
-        
+
         playerTasks = [];
         currentTaskPlayer++;
-        
+
         if (currentTaskPlayer < players.length) {
             updateTaskPlayerUI();
         } else {
+            // Reset customTasks dan warningCells
             customTasks = {};
             warningCells.length = 0;
-            
+
+            // Kumpulkan semua tantangan ke dalam struktur berdasarkan cell
             players.forEach(player => {
                 const tasks = customTasks[player.name] || [];
                 tasks.forEach(task => {
@@ -3134,8 +3161,11 @@ function removeTask(index) {
                     });
                 });
             });
-            
-            warningCells.push(...Object.keys(customTasks).map(Number));
+
+            // Perbarui warningCells berdasarkan customTasks
+            warningCells.push(...Object.keys(customTasks).map(Number).filter(cell => cell >= 1 && cell <= 100));
+
+            // Inisialisasi papan dan UI
             initBoard();
             updateScoreboard();
             updateCurrentTurn();
@@ -3144,6 +3174,7 @@ function removeTask(index) {
         }
     }
 }
+      
 
 
 
