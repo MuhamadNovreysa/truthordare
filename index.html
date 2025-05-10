@@ -1571,6 +1571,7 @@ function createRoom(playerName) {
     });
 }
  
+// Perbaikan di fungsi joinRoom()
 function joinRoom(playerName, code) {
     myPlayerId = generateId();
     roomCode = code.toUpperCase();
@@ -1588,13 +1589,13 @@ function joinRoom(playerName, code) {
             throw new Error('Room sudah penuh');
         }
 
-        // Set status awal untuk mode sistem
+        // PERBAIKAN: Untuk mode sistem, set ready false secara default
         const playerData = {
             name: playerName,
             position: 1,
             color: colors[playerCount % colors.length],
-            ready: roomData.taskMode === 'system', // Ready otomatis untuk mode sistem
-            tasksCompleted: roomData.taskMode === 'system', // Tasks completed otomatis untuk mode sistem
+            ready: false, // Diubah dari true ke false
+            tasksCompleted: roomData.taskMode === 'system',
             isCurrent: false
         };
 
@@ -1619,6 +1620,8 @@ function joinRoom(playerName, code) {
         return roomCode;
     });
 }
+
+
 
 
 function setupRoomListeners() {
@@ -1936,6 +1939,7 @@ function updateGameUI(roomData) {
 
     Object.keys(playersData).forEach(id => {
         const player = playersData[id];
+        // PERBAIKAN: Status untuk mode sistem
         const statusText = player.ready ? 'Ready' : 'Waiting';
         addPlayerToList(player.name, id, id === roomData.host, player.tasksCompleted, statusText);
         if (player.ready) readyCount++;
@@ -1945,17 +1949,11 @@ function updateGameUI(roomData) {
     // Update start button for host
     if (isHost) {
         const startBtn = document.getElementById('host-start-btn');
-        const isManualMode = roomData.taskMode === 'manual';
-
-        // Enable start button if:
-        // 1. Game status is "waiting"
-        // 2. At least 2 players
-        // 3. All players are ready
-        // 4. For manual mode only: all players have completed tasks
+        
+        // PERBAIKAN: Untuk mode sistem, cukup cek ready status saja
         const canStart = roomData.status === "waiting" && 
                          totalPlayers >= 2 && 
-                         readyCount === totalPlayers && 
-                         (!isManualMode || Object.values(playersData).every(player => player.tasksCompleted));
+                         readyCount === totalPlayers;
 
         startBtn.disabled = !canStart;
 
@@ -1964,8 +1962,6 @@ function updateGameUI(roomData) {
             status: roomData.status,
             totalPlayers,
             readyCount,
-            isManualMode,
-            allTasksCompleted: Object.values(playersData).every(player => player.tasksCompleted),
             canStart
         });
     }
