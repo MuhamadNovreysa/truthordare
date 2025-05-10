@@ -1588,14 +1588,17 @@ function joinRoom(playerName, code) {
             throw new Error('Room sudah penuh');
         }
 
-        return roomRef.child('players/' + myPlayerId).set({
+        // Set status awal untuk mode sistem
+        const playerData = {
             name: playerName,
             position: 1,
             color: colors[playerCount % colors.length],
-            ready: false,
-            tasksCompleted: false,
+            ready: roomData.taskMode === 'system', // Ready otomatis untuk mode sistem
+            tasksCompleted: roomData.taskMode === 'system', // Tasks completed otomatis untuk mode sistem
             isCurrent: false
-        });
+        };
+
+        return roomRef.child('players/' + myPlayerId).set(playerData);
     }).then(() => {
         setupRoomListeners();
         document.getElementById('guest-room-code').textContent = roomCode;
@@ -1606,10 +1609,7 @@ function joinRoom(playerName, code) {
             const roomData = snapshot.val();
             if (roomData.taskMode === 'manual') {
                 document.getElementById('guest-custom-tasks-section').style.display = 'block';
-                roomRef.child('players/' + myPlayerId).once('value').then(playerSnapshot => {
-                    const player = playerSnapshot.val();
-                    document.getElementById('guest-ready-btn').disabled = !player.tasksCompleted;
-                });
+                document.getElementById('guest-ready-btn').disabled = true;
             } else {
                 document.getElementById('guest-custom-tasks-section').style.display = 'none';
                 document.getElementById('guest-ready-btn').disabled = false;
@@ -1640,6 +1640,7 @@ function setupRoomListeners() {
 
             // Redirect ke layar game jika status playing
             if (roomData.status === "playing") {
+                console.log("Status room berubah ke playing, memanggil onGameStarted");
                 onGameStarted();
             }
         }
@@ -1854,6 +1855,7 @@ function startGame() {
 
     return roomRef.once('value').then(snapshot => {
         const roomData = snapshot.val();
+        console.log("Room data before starting game:", roomData);
         if (!roomData) throw new Error("Room data not found");
 
         // Pastikan host jalan pertama
@@ -1864,13 +1866,15 @@ function startGame() {
 
         // Cek apakah semua pemain ready
         const allReady = Object.values(playersData).every(player => player.ready);
+        console.log("All players ready:", allReady);
         if (!allReady) {
             throw new Error("Masih ada pemain yang belum ready!");
         }
 
-        // Untuk mode sistem, tidak perlu cek tasksCompleted
+        // Untuk mode manual, cek apakah semua pemain sudah selesai membuat tantangan
         if (roomData.taskMode === 'manual') {
             const allTasksCompleted = Object.values(playersData).every(player => player.tasksCompleted);
+            console.log("All tasks completed:", allTasksCompleted);
             if (!allTasksCompleted) {
                 throw new Error("Masih ada pemain yang belum selesai membuat tantangan!");
             }
@@ -1884,8 +1888,6 @@ function startGame() {
         });
     }).then(() => {
         console.log("Game started successfully!");
-        // Panggil onGameStarted untuk inisialisasi game
-        onGameStarted();
         return Promise.resolve();
     }).catch(error => {
         console.error("Gagal memulai game:", error);
@@ -1893,7 +1895,6 @@ function startGame() {
         return Promise.reject(error);
     });
 }
-
 
 function leaveRoom() {
     if (!roomCode || !myPlayerId) return Promise.resolve();
@@ -1931,15 +1932,13 @@ function updateGameUI(roomData) {
     playerList.innerHTML = '';
 
     let readyCount = 0;
-    let tasksCompletedCount = 0;
     let totalPlayers = 0;
 
     Object.keys(playersData).forEach(id => {
         const player = playersData[id];
-        const statusText = player.ready ? 'Ready' : (player.tasksCompleted ? 'Tasks Done' : 'Waiting');
+        const statusText = player.ready ? 'Ready' : 'Waiting';
         addPlayerToList(player.name, id, id === roomData.host, player.tasksCompleted, statusText);
         if (player.ready) readyCount++;
-        if (player.tasksCompleted) tasksCompletedCount++;
         totalPlayers++;
     });
 
@@ -1956,9 +1955,19 @@ function updateGameUI(roomData) {
         const canStart = roomData.status === "waiting" && 
                          totalPlayers >= 2 && 
                          readyCount === totalPlayers && 
-                         (!isManualMode || tasksCompletedCount === totalPlayers);
+                         (!isManualMode || Object.values(playersData).every(player => player.tasksCompleted));
 
         startBtn.disabled = !canStart;
+
+        // Debugging: Log kondisi
+        console.log('Start Button Status:', {
+            status: roomData.status,
+            totalPlayers,
+            readyCount,
+            isManualMode,
+            allTasksCompleted: Object.values(playersData).every(player => player.tasksCompleted),
+            canStart
+        });
     }
 }
 
