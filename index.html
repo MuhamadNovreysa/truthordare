@@ -38,6 +38,19 @@
             margin: 0 auto;
             padding: 20px;
         }
+        /* Tambahkan di bagian CSS */
+.guest-ready-btn {
+    background-color: var(--success);
+}
+
+.guest-ready-btn:hover {
+    background-color: #3aa76d;
+}
+
+.guest-ready-btn.ready {
+    background-color: var(--dark-gray);
+    cursor: not-allowed;
+}
 
         /* === SCREEN STYLES === */
         .screen {
@@ -1288,8 +1301,8 @@
             </div>
         </div>
 
-        <!-- SCREEN 10: ROOM LOBBY (GUEST) -->
-        <div class="screen" id="guest-lobby-screen">
+        <!-- Ganti SCREEN 10: ROOM LOBBY (GUEST) dengan ini -->
+<div class="screen" id="guest-lobby-screen">
     <div class="card">
         <h1 class="text-center">Room</h1>
         <p class="text-center">Kode Room: <span class="room-code" id="guest-room-code">ABCD12</span></p>
@@ -1297,11 +1310,10 @@
         <div class="lobby">
             <h3><i class="fas fa-users mr-1"></i> Pemain di Room</h3>
             <div class="player-list" id="guest-player-list">
-                <!-- Player list will be populated here -->
+                <!-- Player list akan diisi secara dinamis -->
             </div>
         </div>
         
-        <!-- TOMBOL BUAT TANTANGAN UNTUK GUEST -->
         <div id="guest-custom-tasks-section" style="display: none;">
             <h3><i class="fas fa-tasks mr-1"></i> Tantangan Kustom</h3>
             <p class="text-center">Silakan buat tantangan untuk permainan</p>
@@ -1310,14 +1322,13 @@
             </button>
         </div>
         
-        <!-- TOMBOL READY -->
-        <button id="guest-ready-btn" class="btn" disabled>
+        <button id="guest-ready-btn" class="btn guest-ready-btn">
             <i class="fas fa-check mr-1"></i> Saya Sudah Siap
         </button>
         
         <p class="text-center">Menunggu admin memulai game...</p>
     </div>
-        </div>
+</div>
 
         <!-- SCREEN 11: ONLINE RULES -->
         <div class="screen" id="online-rules-screen">
@@ -1575,6 +1586,7 @@ function createRoom(playerName) {
     });
 }
  
+// Modifikasi fungsi joinRoom():
 function joinRoom(playerName, code) {
     myPlayerId = generateId();
     roomCode = code.toUpperCase();
@@ -1593,7 +1605,6 @@ function joinRoom(playerName, code) {
         }
         
         return roomRef.child('players/' + myPlayerId).set({
-            
             name: playerName,
             position: 1,
             color: colors[playerCount % colors.length],
@@ -1605,21 +1616,8 @@ function joinRoom(playerName, code) {
         setupRoomListeners();
         document.getElementById('guest-room-code').textContent = roomCode;
         
-        // Atur UI berdasarkan taskMode
-        roomRef.once('value').then(snapshot => {
-            const roomData = snapshot.val();
-            if (roomData.taskMode === 'manual') {
-                document.getElementById('guest-custom-tasks-section').style.display = 'block';
-                // Periksa apakah pemain sudah selesai membuat tantangan
-                roomRef.child('players/' + myPlayerId).once('value').then(playerSnapshot => {
-                    const player = playerSnapshot.val();
-                    document.getElementById('guest-ready-btn').disabled = !player.tasksCompleted;
-                });
-            } else {
-                document.getElementById('guest-custom-tasks-section').style.display = 'none';
-                document.getElementById('guest-ready-btn').disabled = false; // Aktifkan tombol ready di mode system
-            }
-        });
+        // SELALU arahkan ke lobby dulu, tidak langsung ke form
+        switchScreen('guest-lobby-screen');
         
         return roomCode;
     });
@@ -1868,6 +1866,7 @@ function nextPlayer() {
     }
 }
 
+// Ganti fungsi startGame() dengan ini:
 function startGame() {
     if (!roomCode) return Promise.reject("No room code");
     
@@ -1875,21 +1874,23 @@ function startGame() {
         const roomData = snapshot.val();
         if (!roomData) throw new Error("Room data not found");
         
-        // Pastikan host jalan pertama
-        const firstPlayerId = roomData.host; 
-        if (!firstPlayerId) throw new Error("Host ID not found");
+        // Pastikan minimal 2 pemain dan semua ready
+        const players = roomData.players || {};
+        const playerCount = Object.keys(players).length;
+        const allReady = Object.values(players).every(p => p.ready);
         
-        const playersData = roomData.players || {};
+        if (playerCount < 2) {
+            throw new Error("Minimal 2 pemain untuk memulai");
+        }
         
-        // Cek apakah semua pemain ready
-        const allReady = Object.values(playersData).every(player => player.ready);
         if (!allReady) {
             throw new Error("Masih ada pemain yang belum ready!");
         }
 
+        // Update status game dan set pemain pertama
         return roomRef.update({
             status: "playing",
-            currentPlayer: firstPlayerId,
+            currentPlayer: roomData.host, // Host jalan pertama
             startedAt: firebase.database.ServerValue.TIMESTAMP
         });
     }).then(() => {
@@ -2205,34 +2206,31 @@ document.getElementById('guest-setup-tasks-btn').onclick = function() {
     };
 
     document.getElementById('guest-ready-btn').onclick = function() {
+    // Ganti fungsi onclick guest-ready-btn dengan ini:
+document.getElementById('guest-ready-btn').onclick = function() {
     if (!isHost && roomRef && myPlayerId) {
+        const btn = this;
+        btn.disabled = true;
+        
         roomRef.once('value').then(snapshot => {
             const roomData = snapshot.val();
-            if (roomData.taskMode === 'manual') {
-                // Mode manual: periksa apakah tantangan sudah selesai
-                return roomRef.child('players/' + myPlayerId).once('value').then(playerSnapshot => {
-                    const player = playerSnapshot.val();
-                    if (!player.tasksCompleted) {
-                        alert("Silakan buat tantangan terlebih dahulu!");
-                        return;
-                    }
-                    return roomRef.child('players/' + myPlayerId).update({
-                        ready: true,
-                        tasksCompleted: true
-                    });
-                });
-            } else {
-                // Mode system: langsung set ready
-                return roomRef.child('players/' + myPlayerId).update({
-                    ready: true
-                });
+            const player = roomData.players[myPlayerId];
+            
+            // Jika mode manual dan belum buat task, arahkan ke form
+            if (roomData.taskMode === 'manual' && !player.tasksCompleted) {
+                setupCustomTasks();
+                return;
             }
+            
+            // Update status ready
+            return roomRef.child('players/' + myPlayerId).update({
+                ready: true
+            });
         }).then(() => {
-            console.log(`Pemain ${myPlayerId} berhasil set ready`);
-            alert("Status Anda sudah siap! Menunggu host memulai game...");
-            // Perbarui UI secara langsung untuk mencerminkan status
-            document.getElementById('guest-ready-btn').disabled = true;
+            btn.classList.add('ready');
+            btn.innerHTML = '<i class="fas fa-check mr-1"></i> Sudah Siap';
         }).catch(error => {
+            btn.disabled = false;
             console.error("Gagal set ready:", error);
             alert("Error: " + error.message);
         });
@@ -2241,19 +2239,37 @@ document.getElementById('guest-setup-tasks-btn').onclick = function() {
 
 
     // Host starts the game
-        document.getElementById('host-start-btn').onclick = function() {
-    if (taskMode === 'system') {
-        startGame().then(() => {
-            console.log("Game dimulai!");
-        }).catch(error => {
-            console.error("Error:", error);
-            alert('Gagal memulai game: ' + error);
-        });
-    } else {
-        startGameWithCustomTasks().then(() => {
-            console.log("Game dengan custom tasks dimulai!");
-        });
-    }
+        // Ganti fungsi onclick host-start-btn dengan ini:
+document.getElementById('host-start-btn').onclick = function() {
+    const btn = this;
+    btn.disabled = true;
+    
+    roomRef.once('value').then(snapshot => {
+        const roomData = snapshot.val();
+        const players = roomData.players || {};
+        
+        // Validasi
+        if (Object.keys(players).length < 2) {
+            throw new Error("Minimal 2 pemain untuk memulai");
+        }
+        
+        const allReady = Object.values(players).every(p => p.ready);
+        if (!allReady) {
+            throw new Error("Masih ada pemain yang belum ready!");
+        }
+        
+        if (roomData.taskMode === 'manual') {
+            const allTasksCompleted = Object.values(players).every(p => p.tasksCompleted);
+            if (!allTasksCompleted) {
+                throw new Error("Masih ada pemain yang belum menyelesaikan tantangan!");
+            }
+        }
+        
+        return startGame();
+    }).catch(error => {
+        btn.disabled = false;
+        alert(error.message);
+    });
 };
 
     document.getElementById('online-start-btn').onclick = function() {
