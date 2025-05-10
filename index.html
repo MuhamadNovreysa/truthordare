@@ -1626,6 +1626,16 @@ function setupRoomListeners() {
     roomRef.on('value', (snapshot) => {
         const roomData = snapshot.val();
         if (roomData) {
+            console.log('Room data updated:', {
+                status: roomData.status,
+                players: Object.keys(roomData.players || {}).map(id => ({
+                    id,
+                    name: roomData.players[id].name,
+                    ready: roomData.players[id].ready,
+                    tasksCompleted: roomData.players[id].tasksCompleted
+                })),
+                currentPlayer: roomData.currentPlayer
+            });
             updateGameUI(roomData);
 
             // Redirect ke layar game jika status playing
@@ -1638,6 +1648,7 @@ function setupRoomListeners() {
     // Listener untuk player baru bergabung
     roomRef.child('players').on('child_added', (snapshot) => {
         const player = snapshot.val();
+        console.log('Player joined:', player);
         onPlayerJoined(player);
 
         if (snapshot.key === myPlayerId && !isHost) {
@@ -1659,10 +1670,11 @@ function setupRoomListeners() {
     // Listener untuk update data player
     roomRef.child('players').on('child_changed', (snapshot) => {
         const player = snapshot.val();
+        console.log('Player updated:', player);
         onPlayerUpdated(player);
     });
 
-    // Listener untuk perubahan giliran - INI YANG DIPERBAIKI
+    // Listener untuk perubahan giliran
     roomRef.child('currentPlayer').on('value', (snapshot) => {
         if (snapshot.exists()) {
             const currentPlayerId = snapshot.val();
@@ -1837,7 +1849,6 @@ function nextPlayer() {
         return Promise.resolve();
     }
 }
-
 function startGame() {
     if (!roomCode) return Promise.reject("No room code");
 
@@ -1865,6 +1876,7 @@ function startGame() {
             }
         }
 
+        // Update status room ke "playing"
         return roomRef.update({
             status: "playing",
             currentPlayer: firstPlayerId,
@@ -1872,14 +1884,17 @@ function startGame() {
         });
     }).then(() => {
         console.log("Game started successfully!");
+        // Pastikan transisi ke layar game
         switchScreen('game-screen');
+        initVoiceControl();
         return Promise.resolve();
     }).catch(error => {
         console.error("Gagal memulai game:", error);
         alert("Error: " + error.message);
         return Promise.reject(error);
     });
-    }
+}
+
 
 function leaveRoom() {
     if (!roomCode || !myPlayerId) return Promise.resolve();
@@ -1918,29 +1933,43 @@ function updateGameUI(roomData) {
 
     let readyCount = 0;
     let tasksCompletedCount = 0;
+    let totalPlayers = 0;
+
     Object.keys(playersData).forEach(id => {
         const player = playersData[id];
         const statusText = player.ready ? 'Ready' : (player.tasksCompleted ? 'Tasks Done' : 'Waiting');
         addPlayerToList(player.name, id, id === roomData.host, player.tasksCompleted, statusText);
         if (player.ready) readyCount++;
         if (player.tasksCompleted) tasksCompletedCount++;
+        totalPlayers++;
     });
 
     // Update start button for host
     if (isHost) {
         const startBtn = document.getElementById('host-start-btn');
-        const totalPlayers = Object.keys(playersData).length;
+        const isManualMode = roomData.taskMode === 'manual';
 
         // Enable start button if:
         // 1. Game status is "waiting"
         // 2. At least 2 players
         // 3. All players are ready
         // 4. For manual mode, all players have completed tasks
-        const isManualMode = roomData.taskMode === 'manual';
-        startBtn.disabled = !(roomData.status === "waiting" && 
-                            totalPlayers >= 2 && 
-                            readyCount === totalPlayers && 
-                            (!isManualMode || tasksCompletedCount === totalPlayers));
+        const canStart = roomData.status === "waiting" && 
+                         totalPlayers >= 2 && 
+                         readyCount === totalPlayers && 
+                         (!isManualMode || tasksCompletedCount === totalPlayers);
+
+        startBtn.disabled = !canStart;
+
+        // Debugging log
+        console.log('Start Button Status:', {
+            status: roomData.status,
+            totalPlayers,
+            readyCount,
+            tasksCompletedCount,
+            isManualMode,
+            canStart
+        });
     }
 }
 
@@ -2023,10 +2052,12 @@ function onGameStarted() {
         document.getElementById('online-status').style.display = 'block';
         document.getElementById('room-code-badge').textContent = "Room: " + roomCode;
         
+        // Pastikan semua pemain beralih ke layar game
         switchScreen('game-screen');
         initVoiceControl();
     }).catch(error => {
         console.error("Error in onGameStarted:", error);
+        alert("Error saat memulai game: " + error.message);
     });
 }
 
@@ -2185,7 +2216,8 @@ document.getElementById('guest-setup-tasks-btn').onclick = function() {
         });
     };
 
-    document.getElementById('guest-ready-btn').onclick = function() {
+    
+document.getElementById('guest-ready-btn').onclick = function() {
     if (!isHost && roomRef && myPlayerId) {
         roomRef.once('value').then(snapshot => {
             const roomData = snapshot.val();
@@ -2217,21 +2249,14 @@ document.getElementById('guest-setup-tasks-btn').onclick = function() {
     }
 };
 
-
     // Host starts the game
         document.getElementById('host-start-btn').onclick = function() {
-    if (taskMode === 'system') {
-        startGame().then(() => {
-            console.log("Game dimulai!");
-        }).catch(error => {
-            console.error("Error:", error);
-            alert('Gagal memulai game: ' + error);
-        });
-    } else {
-        startGameWithCustomTasks().then(() => {
-            console.log("Game dengan custom tasks dimulai!");
-        });
-    }
+    startGame().then(() => {
+        console.log("Game dimulai!");
+    }).catch(error => {
+        console.error("Error:", error);
+        alert('Gagal memulai game: ' + error.message);
+    });
 };
 
     document.getElementById('online-start-btn').onclick = function() {
