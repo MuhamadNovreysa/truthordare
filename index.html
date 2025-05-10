@@ -2821,6 +2821,12 @@ function addCustomTask() {
         return;
     }
     
+    // Validasi: Pastikan kotak bukan ular atau tangga
+    if (snakes[cell] || ladders[cell]) {
+        alert('Kotak ini adalah ular atau tangga, pilih kotak lain!');
+        return;
+    }
+    
     const currentPlayerTasks = playerTasks.filter(task => task.player === players[currentTaskPlayer].name);
     const truthCount = currentPlayerTasks.filter(task => task.type === 'truth').length;
     const dareCount = currentPlayerTasks.filter(task => task.type === 'dare').length;
@@ -2907,40 +2913,58 @@ function removeTask(index) {
     document.getElementById('finish-tasks-btn').disabled = playerTasks.length === 0;
     document.getElementById('add-task-btn').disabled = false;
 }
-
 function finishPlayerTasks() {
+    // Tambahkan tantangan pemain saat ini ke customTasks
     playerTasks.forEach(task => {
         if (!customTasks[task.cell]) {
             customTasks[task.cell] = [];
         }
         customTasks[task.cell].push({
             type: task.type,
-            text: task.text
+            text: task.text,
+            player: task.player
         });
     });
     
+    // Pindah ke pemain berikutnya atau mulai permainan
     if (currentTaskPlayer < players.length - 1) {
         currentTaskPlayer++;
         playerTasks = [];
         updateTaskPlayerUI();
     } else {
-        startGameWithCustomTasks();
+        // Semua pemain selesai, mulai permainan
+        startGameWithCustomTasks().then(() => {
+            initBoard();
+            updateScoreboard();
+            updateCurrentTurn();
+            switchScreen('game-screen');
+            initVoiceControl();
+        }).catch(error => {
+            console.error("Gagal memulai permainan:", error);
+            alert("Gagal memulai permainan: " + error.message);
+        });
     }
 }
 
+
 function startGameWithCustomTasks() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+        // Perbarui warningCells berdasarkan customTasks
         warningCells.length = 0;
-        warningCells.push(...Object.keys(customTasks).map(Number));
+        warningCells.push(...Object.keys(customTasks).map(Number).filter(cell => cell >= 1 && cell <= 100));
         
         if (isOnlineGame) {
+            // Untuk mode online, simpan ke Firebase
             roomRef.update({
                 customTasks: customTasks,
                 warningCells: warningCells
             }).then(() => {
                 resolve();
+            }).catch(error => {
+                reject(error);
             });
         } else {
+            // Untuk mode offline, langsung resolve karena data sudah disimpan di customTasks
             resolve();
         }
     });
