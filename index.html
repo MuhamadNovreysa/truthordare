@@ -1625,40 +1625,55 @@ function joinRoom(playerName, code) {
 
 
 function setupRoomListeners() {
-    // Listener untuk update data room
+    // 1. Listener untuk perubahan data room secara keseluruhan
     roomRef.on('value', (snapshot) => {
         const roomData = snapshot.val();
         if (roomData) {
-            console.log('Room data updated:', {
+            console.log('Update data room:', {
                 status: roomData.status,
-                players: Object.keys(roomData.players || {}).map(id => ({
+                pemain: Object.keys(roomData.players || {}).map(id => ({
                     id,
-                    name: roomData.players[id].name,
+                    nama: roomData.players[id].name,
                     ready: roomData.players[id].ready,
                     tasksCompleted: roomData.players[id].tasksCompleted
                 })),
-                currentPlayer: roomData.currentPlayer
+                pemainSekarang: roomData.currentPlayer
             });
+            
+            // Update tampilan UI
             updateGameUI(roomData);
 
-            // Redirect ke layar game jika status playing
+            // Jika status berubah ke playing, panggil onGameStarted
             if (roomData.status === "playing") {
-                console.log("Status room berubah ke playing, memanggil onGameStarted");
+                console.log("Status room berubah ke playing");
                 onGameStarted();
             }
         }
     });
 
-    // Listener untuk player baru bergabung
+    // 2. Listener khusus untuk perubahan status room
+    roomRef.child('status').on('value', (snapshot) => {
+        if (snapshot.exists() && snapshot.val() === "playing") {
+            console.log("Deteksi perubahan status ke playing");
+            onGameStarted();
+        }
+    });
+
+    // 3. Listener untuk pemain baru yang bergabung
     roomRef.child('players').on('child_added', (snapshot) => {
         const player = snapshot.val();
-        console.log('Player joined:', player);
+        console.log('Pemain bergabung:', player.name);
+        
+        // Panggil fungsi ketika ada pemain baru
         onPlayerJoined(player);
 
+        // Jika ini adalah pemain lokal (guest)
         if (snapshot.key === myPlayerId && !isHost) {
+            console.log("Pemain lokal (guest) bergabung");
             switchScreen('guest-lobby-screen');
             document.getElementById('guest-room-code').textContent = roomCode;
 
+            // Periksa mode permainan
             roomRef.once('value').then(roomSnapshot => {
                 const roomData = roomSnapshot.val();
                 if (roomData.taskMode === 'manual' && !player.tasksCompleted) {
@@ -1671,24 +1686,27 @@ function setupRoomListeners() {
         }
     });
 
-    // Listener untuk update data player
+    // 4. Listener untuk update data pemain
     roomRef.child('players').on('child_changed', (snapshot) => {
         const player = snapshot.val();
-        console.log('Player updated:', player);
+        console.log('Update data pemain:', player.name);
+        
+        // Panggil fungsi ketika data pemain berubah
         onPlayerUpdated(player);
     });
 
-    // Listener untuk perubahan giliran
+    // 5. Listener untuk perubahan giliran pemain
     roomRef.child('currentPlayer').on('value', (snapshot) => {
         if (snapshot.exists()) {
             const currentPlayerId = snapshot.val();
             if (!currentPlayerId) return;
 
             if (!players || players.length === 0) {
-                console.warn("Players array not initialized yet");
+                console.warn("Array pemain belum diinisialisasi");
                 return;
             }
 
+            // Cari index pemain yang sekarang gilirannya
             const playerIndex = players.findIndex(p => p.id === currentPlayerId);
             if (playerIndex >= 0) {
                 currentPlayer = playerIndex;
@@ -1696,6 +1714,8 @@ function setupRoomListeners() {
             }
         }
     });
+
+    console.log('Listener Firebase berhasil dipasang');
 }
 
 
@@ -1995,30 +2015,55 @@ function onPlayerUpdated(player) {
 
 
 function onGameStarted() {
+    // 1. Cek jika game screen sudah aktif, jika ya maka berhenti
+    if (document.getElementById('game-screen').classList.contains('active')) {
+        console.log('Game sudah berjalan, tidak perlu inisialisasi ulang');
+        return;
+    }
+    
+    // 2. Ambil data room terbaru dari Firebase
     roomRef.once('value').then(snapshot => {
         const roomData = snapshot.val();
-        if (!roomData || roomData.status !== "playing") return;
         
-        // Initialize game state
-        players = Object.entries(roomData.players || {}).map(([id, player], index) => ({
-            id: id,
-            name: player.name,
-            color: player.color,
-            number: index + 1
-        }));
+        // 3. Validasi data room dan status
+        if (!roomData) {
+            console.error('Data room tidak ditemukan');
+            return;
+        }
         
+        if (roomData.status !== "playing") {
+            console.error('Status room belum playing:', roomData.status);
+            return;
+        }
+        
+        console.log("Memulai game dengan data:", roomData);
+        
+        // 4. Inisialisasi pemain
+        players = [];
         positions = {};
-        Object.entries(roomData.players || {}).forEach(([id, player]) => {
-            positions[player.name] = player.position;
+        
+        Object.entries(roomData.players || {}).forEach(([id, player], index) => {
+            // Tambahkan pemain ke array players
+            players.push({
+                id: id,
+                name: player.name,
+                color: player.color,
+                number: index + 1
+            });
+            
+            // Set posisi awal pemain
+            positions[player.name] = player.position || 1;
         });
-
-        // Untuk mode sistem, gunakan warningCells default
+        
+        // 5. Atur warningCells berdasarkan mode permainan
         if (roomData.taskMode === 'system') {
+            // Gunakan warningCells default untuk mode sistem
             warningCells = [12, 22, 35, 48, 63, 77, 85, 95];
         } else {
-            // Untuk mode manual, gabungkan custom tasks
+            // Untuk mode manual, gabungkan custom tasks dari semua pemain
             customTasks = {};
-            warningCells.length = 0;
+            warningCells = [];
+            
             Object.values(roomData.players || {}).forEach(player => {
                 if (player.customTasks) {
                     Object.keys(player.customTasks).forEach(cell => {
@@ -2029,31 +2074,40 @@ function onGameStarted() {
                     });
                 }
             });
+            
+            // Tambahkan cell yang ada custom task ke warningCells
             warningCells.push(...Object.keys(customTasks).map(Number).filter(cell => cell >= 1 && cell <= 100));
         }
-
-        // Set current player berdasarkan data dari Firebase
+        
+        // 6. Set current player berdasarkan data dari Firebase
         if (roomData.currentPlayer) {
             currentPlayer = players.findIndex(p => p.id === roomData.currentPlayer);
             if (currentPlayer === -1) {
-                currentPlayer = 0; // Fallback ke player pertama jika tidak ditemukan
+                currentPlayer = 0; // Fallback ke pemain pertama
+                console.warn('Pemain current tidak ditemukan, menggunakan pemain pertama');
             }
         } else {
             currentPlayer = 0;
+            console.warn('Current player tidak ada di data, menggunakan pemain pertama');
         }
         
+        // 7. Inisialisasi papan permainan
         initBoard();
         updateScoreboard();
         updateCurrentTurn();
         
+        // 8. Tampilkan info room di game screen
         document.getElementById('online-status').style.display = 'block';
         document.getElementById('room-code-badge').textContent = "Room: " + roomCode;
         
-        // Pastikan semua pemain beralih ke layar game
+        // 9. Pindah ke layar game dan aktifkan voice control
         switchScreen('game-screen');
         initVoiceControl();
+        
+        console.log('Game berhasil dimulai!');
+        
     }).catch(error => {
-        console.error("Error in onGameStarted:", error);
+        console.error("Gagal memulai game:", error);
         alert("Error saat memulai game: " + error.message);
     });
 }
@@ -2247,13 +2301,27 @@ document.getElementById('guest-ready-btn').onclick = function() {
 };
 
     // Host starts the game
-        document.getElementById('host-start-btn').onclick = function() {
+        // Host starts the game - Perbaikan
+document.getElementById('host-start-btn').onclick = function() {
+    const startBtn = this;
+    startBtn.disabled = true; // Disable button to prevent multiple clicks
+    
     startGame().then(() => {
-        console.log("Game dimulai!");
-        // Tidak perlu switchScreen di sini karena onGameStarted akan menangani ini
+        console.log("Game started successfully!");
+        
+        // Force check room status in case listener didn't trigger
+        roomRef.once('value').then(snapshot => {
+            const roomData = snapshot.val();
+            if (roomData.status === "playing") {
+                // If for some reason onGameStarted didn't trigger
+                console.log("Forcing game start...");
+                onGameStarted();
+            }
+        });
     }).catch(error => {
-        console.error("Error:", error);
+        console.error("Error starting game:", error);
         alert('Gagal memulai game: ' + error.message);
+        startBtn.disabled = false; // Re-enable button if failed
     });
 };
 
