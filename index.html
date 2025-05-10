@@ -2804,22 +2804,22 @@ function addCustomTask() {
     const type = document.getElementById('task-type').value;
     const text = document.getElementById('task-text').value.trim();
     const cell = parseInt(document.getElementById('task-cell').value);
-    
+
     if (!text) {
         alert('Mohon masukkan teks tantangan');
         return;
     }
-    
+
     if (isNaN(cell)) {
         alert('Mohon masukkan nomor kotak yang valid (1-100)');
         return;
     }
-    
+
     if (cell < 1 || cell > 100) {
         alert('Nomor kotak harus antara 1 dan 100');
         return;
     }
-    
+
     const currentPlayerTasks = playerTasks.filter(task => task.player === players[currentTaskPlayer].name);
     const truthCount = currentPlayerTasks.filter(task => task.type === 'truth').length;
     const dareCount = currentPlayerTasks.filter(task => task.type === 'dare').length;
@@ -2839,22 +2839,19 @@ function addCustomTask() {
         cell,
         player: players[currentTaskPlayer].name
     };
-    
+
     playerTasks.push(task);
     updateTaskListUI();
-    
+
     document.getElementById('task-text').value = '';
     document.getElementById('task-cell').value = '';
-    
+
+    // Aktifkan tombol Selesai jika sudah cukup tantangan
     const newTruthCount = currentPlayerTasks.filter(task => task.type === 'truth').length + (type === 'truth' ? 1 : 0);
     const newDareCount = currentPlayerTasks.filter(task => task.type === 'dare').length + (type === 'dare' ? 1 : 0);
 
-    if (newTruthCount >= 2 && newDareCount >= 2) {
-        document.getElementById('finish-tasks-btn').disabled = false;
-        document.getElementById('add-task-btn').disabled = true;
-    } else {
-        document.getElementById('finish-tasks-btn').disabled = false;
-    }
+    document.getElementById('finish-tasks-btn').disabled = false;
+    document.getElementById('add-task-btn').disabled = (newTruthCount >= 2 && newDareCount >= 2);
 }
 
 function updateTaskListUI() {
@@ -2907,7 +2904,9 @@ function removeTask(index) {
     document.getElementById('add-task-btn').disabled = false;
 }
 
+
 function finishPlayerTasks() {
+    // Simpan semua tantangan dari pemain saat ini
     playerTasks.forEach(task => {
         if (!customTasks[task.cell]) {
             customTasks[task.cell] = [];
@@ -2918,18 +2917,40 @@ function finishPlayerTasks() {
             player: task.player
         });
     });
-    
+
+    // Periksa apakah ini pemain terakhir
     if (currentTaskPlayer < players.length - 1) {
+        // Lanjut ke pemain berikutnya
         currentTaskPlayer++;
         playerTasks = [];
         updateTaskPlayerUI();
     } else {
         // Semua pemain sudah selesai, mulai game
-        startGameWithCustomTasks().then(() => {
-            console.log("Game dimulai dengan custom tasks");
-        }).catch(error => {
-            console.error("Gagal memulai game:", error);
-        });
+        if (isOnlineGame) {
+            // Untuk mode online
+            roomRef.update({
+                customTasks: customTasks,
+                warningCells: Object.keys(customTasks).map(Number),
+                status: "playing"
+            }).then(() => {
+                initBoard();
+                updateScoreboard();
+                updateCurrentTurn();
+                switchScreen('game-screen');
+                initVoiceControl();
+            }).catch(error => {
+                console.error("Gagal memulai game online:", error);
+                alert("Error: Gagal memulai game");
+            });
+        } else {
+            // Untuk mode offline
+            warningCells = Object.keys(customTasks).map(Number); // Update warningCells
+            initBoard();
+            updateScoreboard();
+            updateCurrentTurn();
+            switchScreen('game-screen');
+            initVoiceControl();
+        }
     }
 }
 
