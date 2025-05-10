@@ -1868,7 +1868,7 @@ function startGame() {
             throw new Error("Masih ada pemain yang belum ready!");
         }
 
-        // Cek apakah semua pemain telah menyelesaikan tantangan di mode manual
+        // Untuk mode sistem, tidak perlu cek tasksCompleted
         if (roomData.taskMode === 'manual') {
             const allTasksCompleted = Object.values(playersData).every(player => player.tasksCompleted);
             if (!allTasksCompleted) {
@@ -1884,9 +1884,8 @@ function startGame() {
         });
     }).then(() => {
         console.log("Game started successfully!");
-        // Pastikan transisi ke layar game
-        switchScreen('game-screen');
-        initVoiceControl();
+        // Panggil onGameStarted untuk inisialisasi game
+        onGameStarted();
         return Promise.resolve();
     }).catch(error => {
         console.error("Gagal memulai game:", error);
@@ -1953,23 +1952,13 @@ function updateGameUI(roomData) {
         // 1. Game status is "waiting"
         // 2. At least 2 players
         // 3. All players are ready
-        // 4. For manual mode, all players have completed tasks
+        // 4. For manual mode only: all players have completed tasks
         const canStart = roomData.status === "waiting" && 
                          totalPlayers >= 2 && 
                          readyCount === totalPlayers && 
                          (!isManualMode || tasksCompletedCount === totalPlayers);
 
         startBtn.disabled = !canStart;
-
-        // Debugging log
-        console.log('Start Button Status:', {
-            status: roomData.status,
-            totalPlayers,
-            readyCount,
-            tasksCompletedCount,
-            isManualMode,
-            canStart
-        });
     }
 }
 
@@ -2018,8 +2007,11 @@ function onGameStarted() {
             positions[player.name] = player.position;
         });
 
-        // Gabungkan semua custom tasks
-        if (roomData.taskMode === 'manual') {
+        // Untuk mode sistem, gunakan warningCells default
+        if (roomData.taskMode === 'system') {
+            warningCells = [12, 22, 35, 48, 63, 77, 85, 95];
+        } else {
+            // Untuk mode manual, gabungkan custom tasks
             customTasks = {};
             warningCells.length = 0;
             Object.values(roomData.players || {}).forEach(player => {
@@ -2253,6 +2245,7 @@ document.getElementById('guest-ready-btn').onclick = function() {
         document.getElementById('host-start-btn').onclick = function() {
     startGame().then(() => {
         console.log("Game dimulai!");
+        // Tidak perlu switchScreen di sini karena onGameStarted akan menangani ini
     }).catch(error => {
         console.error("Error:", error);
         alert('Gagal memulai game: ' + error.message);
