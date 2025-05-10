@@ -1983,9 +1983,16 @@ function onGameStarted() {
 // === GAME FUNCTIONS ===
 function initGame() {
     // Setup event listeners
-    document.getElementById('start-btn').onclick = function() {
-        switchScreen('mode-screen');
-    };
+    // Ganti ini di initGame():
+document.getElementById('start-btn').onclick = function() {
+    // Reset semua state game
+    players = [];
+    positions = {};
+    currentPlayer = 0;
+    
+    // Langsung ke mode selection
+    switchScreen('mode-screen');
+};
 
     // Mode selection
     document.getElementById('offline-mode').onclick = function() {
