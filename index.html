@@ -1662,8 +1662,8 @@ function setupRoomListeners() {
         onPlayerUpdated(player);
     });
 
-    // Listener untuk perubahan giliran
-    roomRef.child('currentPlayer').on(' Cantor value', (snapshot) => {
+    // Listener untuk perubahan giliran - INI YANG DIPERBAIKI
+    roomRef.child('currentPlayer').on('value', (snapshot) => {
         if (snapshot.exists()) {
             const currentPlayerId = snapshot.val();
             if (!currentPlayerId) return;
