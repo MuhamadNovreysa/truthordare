@@ -1543,7 +1543,7 @@ function createRoom(playerName) {
         host: myPlayerId,
         players: {
             [myPlayerId]: {
-                id: myPlayerId, 
+    
                 name: playerName,
                 position: 1,
                 color: colors[0],
@@ -1592,7 +1592,7 @@ function joinRoom(playerName, code) {
         }
         
         return roomRef.child('players/' + myPlayerId).set({
-            id: myPlayerId, 
+            
             name: playerName,
             position: 1,
             color: colors[playerCount % colors.length],
