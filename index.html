@@ -1985,10 +1985,8 @@ function initGame() {
     // Setup event listeners
     // Ganti ini di initGame():
 document.getElementById('start-btn').onclick = function() {
-    // Reset semua state game
-    players = [];
-    positions = {};
-    currentPlayer = 0;
+    
+    
     
     // Langsung ke mode selection
     switchScreen('mode-screen');
@@ -3012,118 +3010,7 @@ function isCurrentPlayer(playerId) {
     return playerId === myPlayerId;
 }
 
-    // Fungsi untuk setup papan permainan manual
-function setupManualBoard() {
-    // Hanya set manualTaskCells, tidak perlu kirim snakes/ladders ke Firebase
-    const excludedCells = [5, 10, 15, 30, 38, 43, 57, 60, 75, 87];
     
-    window.manualTaskCells = [];
-    for (let i = 2; i <= 100; i++) {
-        if (!excludedCells.includes(i)) {
-            window.manualTaskCells.push(i);
-        }
-    }
-}
-    
-    // Data ular dan tangga sesuai kodingan Anda
-    const snakes = {
-        57: 34,
-        30: 21,
-        87: 68,
-        15: 5,
-        60: 40
-    };
-    
-    const ladders = {
-        10: 24,
-        75: 90,
-        43: 53,
-        38: 46,
-        5: 17
-    };
-    
-    // Kirim data ke Firebase
-    if (isOnlineGame) {
-        const gameData = {
-            manualTaskCells: manualTaskCells,
-            snakes: snakes,
-            ladders: ladders,
-            taskMode: 'manual' // Pastikan mode manual
-        };
-        
-        roomRef.update(gameData).then(() => {
-            console.log("Data papan manual berhasil dikirim ke Firebase");
-        }).catch(error => {
-            console.error("Gagal mengirim data papan:", error);
-        });
-    } else {
-        // Untuk offline, simpan di variabel
-        window.manualTaskCells = manualTaskCells;
-        window.snakes = snakes;
-        window.ladders = ladders;
-    }
-}
-
-// Panggil fungsi ini saat memulai game manual
-function startManualGame() {
-    setupManualBoard(); // Hanya set manualTaskCells
-    customTasks = {};
-    playerTasks = [];
-    currentTaskPlayer = 0;
-    
-    if (isOnlineGame) {
-        roomRef.update({
-            customTasks: {},
-            warningCells: []
-        }).then(() => {
-            setupCustomTasks();
-        });
-    } else {
-        setupCustomTasks(); // Langsung ke input task untuk offline
-    }
-}
-// Modifikasi fungsi addCustomTask untuk validasi sel manual
-function addCustomTask() {
-    const type = document.getElementById('task-type').value;
-    const text = document.getElementById('task-text').value.trim();
-    const cell = parseInt(document.getElementById('task-cell').value);
-
-    // Validasi dasar
-    if (!text || isNaN(cell)) {
-        alert("Input tidak valid!");
-        return;
-    }
-
-    // Validasi sel manual
-    const allowedCells = isOnlineGame ? 
-        (roomData?.manualTaskCells || window.manualTaskCells || []) : 
-        window.manualTaskCells || [];
-
-    if (!allowedCells.includes(cell)) {
-        alert(`Tidak bisa menambahkan task di sel ${cell}! Pilih sel lain.`);
-        return;
-    }
-
-    // ... (kode tambahkan task tetap sama)
-}
-
-
-// Di fungsi joinRoom atau createRoom, tambahkan:
-function joinRoom(playerName, code) {
-    // ... (kode existing)
-    
-    return roomRef.once('value').then((snapshot) => {
-        const roomData = snapshot.val();
-        if (!roomData) throw new Error('Room tidak ditemukan');
-        
-        // Load konfigurasi manual jika ada
-        if (roomData.taskMode === 'manual') {
-            window.manualTaskCells = roomData.manualTaskCells || [];
-        }
-        
-        // ... (kode join room yang sudah ada)
-    });
-}
 
 // === INITIALIZE GAME ===
 document.addEventListener('DOMContentLoaded', function() {
