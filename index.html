@@ -2525,35 +2525,42 @@ function handleSnakesAndLadders(player) {
 
 function checkTruthDare() {
     const player = players[currentPlayer];
+    const currentPos = positions[player.name];
     const rollBtn = document.getElementById('roll-btn');
-    
-    if (warningCells.includes(positions[player.name])) {
-        if (taskMode === 'manual' && customTasks[positions[player.name]]) {
-            const cellTasks = customTasks[positions[player.name]];
-            const randomTask = cellTasks[Math.floor(Math.random() * cellTasks.length)];
-            
-            document.getElementById('task-result').innerHTML = `
-                <div class="task-card">
-                    <h3>${randomTask.type.toUpperCase()}</h3>
-                    <p>${randomTask.text}</p>
-                    <p class="task-item-cell">Dibuat oleh: ${randomTask.player || 'Sistem'}</p>
-                </div>
-            `;
-            
-            document.getElementById('truth-btn').style.display = 'none';
-            document.getElementById('dare-btn').style.display = 'none';
-            document.getElementById('continue-btn').style.display = 'block';
-            document.getElementById('truth-dare-modal').style.display = 'flex';
-        } else {
-            document.getElementById('truth-dare-modal').style.display = 'flex';
-            document.getElementById('task-result').innerHTML = '';
-            document.getElementById('truth-btn').style.display = 'inline-block';
-            document.getElementById('dare-btn').style.display = 'inline-block';
-            document.getElementById('continue-btn').style.display = 'none';
-        }
-    } else {
+
+    // Cek jika bukan cell Truth/Dare
+    if (!warningCells.includes(currentPos)) {
         nextPlayer();
+        rollBtn.disabled = false;
+        return;
     }
+
+    // Mode MANUAL dengan task tersedia
+    if (taskMode === 'manual' && customTasks[currentPos]?.length > 0) {
+        const cellTasks = customTasks[currentPos];
+        const randomTask = cellTasks[Math.floor(Math.random() * cellTasks.length)];
+        
+        document.getElementById('task-result').innerHTML = `
+            <div class="task-card">
+                <h3>${randomTask.type.toUpperCase()}</h3>
+                <p>${randomTask.text}</p>
+                <p class="task-item-cell">Dibuat oleh: ${randomTask.player || 'Sistem'}</p>
+            </div>
+        `;
+        
+        document.getElementById('truth-btn').style.display = 'none';
+        document.getElementById('dare-btn').style.display = 'none';
+        document.getElementById('continue-btn').style.display = 'block';
+    } 
+    // Fallback ke mode SYSTEM
+    else {
+        document.getElementById('task-result').innerHTML = '';
+        document.getElementById('truth-btn').style.display = 'inline-block';
+        document.getElementById('dare-btn').style.display = 'inline-block';
+        document.getElementById('continue-btn').style.display = 'none';
+    }
+
+    document.getElementById('truth-dare-modal').style.display = 'flex';
     rollBtn.disabled = false;
 }
 
@@ -2920,47 +2927,72 @@ function removeTask(index) {
     document.getElementById('finish-tasks-btn').disabled = playerTasks.length === 0;
     document.getElementById('add-task-btn').disabled = false;
 }
-function finishPlayerTasks() {
-    // Simpan tasks pemain saat ini
+async function finishPlayerTasks() {
+    const forbiddenCells = [5, 10, 15, 30, 38, 43, 57, 60, 75, 87]; // Cell ular/tangga
+    const updates = {};
+    const newWarningCells = new Set(warningCells); // Gunakan Set untuk hindari duplikat
+
+    // Proses tasks untuk semua pemain
     playerTasks.forEach(task => {
-        if (!customTasks[task.cell]) {
-            customTasks[task.cell] = [];
+        // Validasi cell
+        if (forbiddenCells.includes(task.cell)) {
+            console.warn(`Task di kotak ${task.cell} diabaikan (khusus ular/tangga)`);
+            return;
         }
-        customTasks[task.cell].push({
+
+        // Tambahkan ke updates
+        if (!updates[`customTasks/${task.cell}`]) {
+            updates[`customTasks/${task.cell}`] = [];
+        }
+        updates[`customTasks/${task.cell}`].push({
             type: task.type,
             text: task.text,
             player: players[currentTaskPlayer].name
         });
+
+        // Tambahkan ke warningCells
+        newWarningCells.add(task.cell);
     });
 
-    // Jika masih ada pemain berikutnya
+    // Untuk mode online: simpan ke Firebase
+    if (isOnlineGame) {
+        try {
+            updates['warningCells'] = Array.from(newWarningCells);
+            updates['taskMode'] = 'manual';
+            
+            await roomRef.update(updates);
+            console.log("Data tasks tersimpan di Firebase");
+        } catch (error) {
+            console.error("Gagal simpan ke Firebase:", error);
+            return;
+        }
+    } 
+    // Untuk mode offline: simpan ke variabel lokal
+    else {
+        Object.keys(updates).forEach(key => {
+            const cell = key.split('/')[1];
+            customTasks[cell] = updates[key];
+        });
+        warningCells = Array.from(newWarningCells);
+    }
+
+    // Update UI atau lanjut ke pemain berikutnya
     if (currentTaskPlayer < players.length - 1) {
         currentTaskPlayer++;
         playerTasks = [];
         updateTaskPlayerUI();
-    } 
-    // Jika semua pemain selesai
-    else {
-        const warningCellsFromTasks = Object.keys(customTasks).map(Number);
-        
-        if (isOnlineGame) {
-            roomRef.update({
-                customTasks: customTasks,
-                warningCells: warningCellsFromTasks,
-                status: "playing"
-            }).then(() => {
-                initGameAfterTasks(warningCellsFromTasks);
-            });
-        } else {
-            // Untuk offline
-            warningCells = warningCellsFromTasks;
-            initGameAfterTasks(warningCells);
-        }
+    } else {
+        initGameAfterTasks(Array.from(newWarningCells));
     }
 }
 
-function initGameAfterTasks(warningCells) {
-    taskMode = 'manual';
+function initGameAfterTasks(activeCells) {
+    // Filter ulang untuk pastikan tidak ada cell terlarang
+    const forbiddenCells = [5, 10, 15, 30, 38, 43, 57, 60, 75, 87];
+    warningCells = activeCells.filter(cell => !forbiddenCells.includes(cell));
+
+    console.log("Cell aktif untuk Truth/Dare:", warningCells);
+    
     initBoard();
     updateScoreboard();
     updateCurrentTurn();
