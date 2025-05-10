@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ular Tangga Truth or Dare (Online & Offline)</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Righteous&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
             --primary: #6C63FF;
@@ -986,7 +986,6 @@
         .mb-3 { margin-bottom: 1.5rem; }
         .mb-4 { margin-bottom: 2rem; }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -1086,7 +1085,7 @@
                     </button>
                     <button class="count-btn btn btn-outline" data-count="6">
                         <i class="fas fa-users mr-1"></i> 6 Pemain
-                    </button>
+                    </div>
                     <button class="count-btn btn btn-outline" data-count="7">
                         <i class="fas fa-users mr-1"></i> 7 Pemain
                     </button>
@@ -1243,9 +1242,7 @@
                 
                 <div class="lobby">
                     <h3><i class="fas fa-users mr-1"></i> Pemain di Room</h3>
-                    <div class="player-list" id="host-player-list">
-                        <!-- Player list will be populated here -->
-                    </div>
+                    <div class="player-list" id="host-player-list"></div>
                 </div>
                 
                 <div id="host-custom-tasks-section" style="display: none;">
@@ -1293,9 +1290,7 @@
                 
                 <div class="lobby">
                     <h3><i class="fas fa-users mr-1"></i> Pemain di Room</h3>
-                    <div class="player-list" id="guest-player-list">
-                        <!-- Player list will be populated here -->
-                    </div>
+                    <div class="player-list" id="guest-player-list"></div>
                 </div>
                 <button id="guest-ready-btn" class="btn">
                     <i class="fas fa-check mr-1"></i> Saya Sudah Siap
@@ -1429,693 +1424,699 @@
             messagingSenderId: "344900787531",
             appId: "1:344900787531:web:d24f270489c1fdff8d1cce"
         };
-const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
 
-    // === GAME DATA ===
-    const colors = [
-        '#FF6584', '#6C63FF', '#48BB78', '#F6AD55',
-        '#9F7AEA', '#4299E1', '#ED8936', '#667EEA'
-    ];
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-    const snakes = {
-        57: 34, 30: 21, 87: 68, 15: 5, 60: 40
-    };
+        // === GAME DATA ===
+        const colors = [
+            '#FF6584', '#6C63FF', '#48BB78', '#F6AD55',
+            '#9F7AEA', '#4299E1', '#ED8936', '#667EEA'
+        ];
 
-    const ladders = {
-        10: 24, 75: 90, 43: 53, 38: 46, 5: 17
-    };
-
-    const restrictedCells = [5, 10, 15, 30, 38, 43, 57, 60, 75, 87];
-    let warningCells = [12, 22, 35, 48, 63, 77, 85, 95];
-
-    const systemTasks = {
-        truth: [
-            "Pernah naksir teman sendiri? Ceritakan!",
-            "Apa rahasia yang belum pernah kamu ceritakan ke siapapun?",
-            "Pernah nyontek saat ujian? Kapan terakhir kali?",
-            "Kalau bisa jadi binatang, mau jadi apa dan kenapa?",
-            "Apa hal paling memalukan yang pernah terjadi padamu?",
-            "Apa kebiasaan anehmu yang tidak diketahui orang lain?",
-            "Pernah berbohong ke orang tua tentang apa?",
-            "Apa hal paling bodoh yang pernah kamu lakukan?"
-        ],
-        dare: [
-            "Tirukan suara ayam selama 10 detik!",
-            "Minum air tanpa menggunakan tangan",
-            "Tari seperti bebek selama 30 detik",
-            "Panggil aku 'Yang Mulia' sampai giliranmu berikutnya",
-            "Tirukan gaya jalan model di catwalk",
-            "Nyanyi lagu anak kecil dengan suara keras",
-            "Biarkan orang sebelahmu menggambar di wajahmu",
-            "Ucapkan alfabet terbalik dari Z ke A"
-        ]
-    };
-
-    // Game state
-    let players = [];
-    let positions = {};
-    let currentPlayer = 0;
-    let playerCount = 0;
-    let recognition;
-    let isListening = false;
-    let isOnlineGame = false;
-    let isHost = false;
-    let roomCode = '';
-    let myPlayerId = '';
-    let maxPlayers = 2;
-    let taskMode = 'system';
-    let customTasks = {};
-    let currentTaskPlayer = 0;
-    let playerTasks = [];
-    let roomRef = null;
-
-    // === HELPER FUNCTIONS ===
-    function switchScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(screen => {
-            screen.classList.remove('active');
-        });
-        document.getElementById(screenId).classList.add('active');
-    }
-
-    function generateId() {
-        return 'player-' + Math.random().toString(36).substr(2, 9);
-    }
-
-    function generateRoomCode() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let result = '';
-        for (let i = 0; i < 6; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-    }
-
-    // === FIREBASE FUNCTIONS ===
-    function createRoom(playerName) {
-        myPlayerId = generateId();
-        roomCode = generateRoomCode();
-        roomRef = database.ref('rooms/' + roomCode);
-
-        const roomData = {
-            host: myPlayerId,
-            players: {
-                [myPlayerId]: {
-                    name: playerName,
-                    position: 1,
-                    color: colors[0],
-                    ready: true,
-                    isCurrent: false
-                }
-            },
-            currentPlayer: myPlayerId,
-            status: "waiting",
-            maxPlayers: maxPlayers,
-            taskMode: taskMode,
-            customTasks: {},
-            warningCells: warningCells,
-            createdAt: firebase.database.ServerValue.TIMESTAMP
+        const snakes = {
+            57: 34, 30: 21, 87: 68, 15: 5, 60: 40
         };
 
-        return roomRef.set(roomData).then(() => {
-            setupRoomListeners();
-            return roomCode;
-        });
-    }
+        const ladders = {
+            10: 24, 75: 90, 43: 53, 38: 46, 5: 17
+        };
 
-    function joinRoom(playerName, code) {
-        myPlayerId = generateId();
-        roomCode = code.toUpperCase();
-        roomRef = database.ref('rooms/' + roomCode);
+        const restrictedCells = [5, 10, 15, 30, 38, 43, 57, 60, 75, 87];
+        let warningCells = [12, 22, 35, 48, 63, 77, 85, 95];
 
-        return roomRef.once('value').then((snapshot) => {
-            if (!snapshot.exists()) {
-                throw new Error('Room tidak ditemukan');
-            }
+        const systemTasks = {
+            truth: [
+                "Pernah naksir teman sendiri? Ceritakan!",
+                "Apa rahasia yang belum pernah kamu ceritakan ke siapapun?",
+                "Pernah nyontek saat ujian? Kapan terakhir kali?",
+                "Kalau bisa jadi binatang, mau jadi apa dan kenapa?",
+                "Apa hal paling memalukan yang pernah terjadi padamu?",
+                "Apa kebiasaan anehmu yang tidak diketahui orang lain?",
+                "Pernah berbohong ke orang tua tentang apa?",
+                "Apa hal paling bodoh yang pernah kamu lakukan?"
+            ],
+            dare: [
+                "Tirukan suara ayam selama 10 detik!",
+                "Minum air tanpa menggunakan tangan",
+                "Tari seperti bebek selama 30 detik",
+                "Panggil aku 'Yang Mulia' sampai giliranmu berikutnya",
+                "Tirukan gaya jalan model di catwalk",
+                "Nyanyi lagu anak kecil dengan suara keras",
+                "Biarkan orang sebelahmu menggambar di wajahmu",
+                "Ucapkan alfabet terbalik dari Z ke A"
+            ]
+        };
 
-            const roomData = snapshot.val();
-            const playerCount = Object.keys(roomData.players || {}).length;
+        // Game state
+        let players = [];
+        let positions = {};
+        let currentPlayer = 0;
+        let playerCount = 0;
+        let recognition;
+        let isListening = false;
+        let isOnlineGame = false;
+        let isHost = false;
+        let roomCode = '';
+        let myPlayerId = '';
+        let maxPlayers = 2;
+        let taskMode = 'system';
+        let customTasks = {};
+        let currentTaskPlayer = 0;
+        let playerTasks = [];
+        let roomRef = null;
 
-            if (playerCount >= roomData.maxPlayers) {
-                throw new Error('Room sudah penuh');
-            }
-
-            return roomRef.child('players/' + myPlayerId).set({
-                name: playerName,
-                position: 1,
-                color: colors[playerCount % colors.length],
-                ready: false,
-                isCurrent: false
+        // === HELPER FUNCTIONS ===
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
             });
-        }).then(() => {
-            setupRoomListeners();
-            switchScreen('guest-lobby-screen');
-            document.getElementById('guest-room-code').textContent = roomCode;
-            return roomCode;
-        });
-    }
-
-    function setupRoomListeners() {
-        roomRef.on('value', (snapshot) => {
-            const roomData = snapshot.val();
-            if (roomData) {
-                updateGameUI(roomData);
-                if (roomData.taskMode === 'manual' && roomData.customTasks) {
-                    customTasks = roomData.customTasks;
-                    warningCells = roomData.warningCells || warningCells;
-                }
-            }
-        });
-
-        roomRef.child('players').on('child_added', (snapshot) => {
-            const player = snapshot.val();
-            onPlayerJoined(player);
-        });
-
-        roomRef.child('players').on('child_changed', (snapshot) => {
-            const player = snapshot.val();
-            onPlayerUpdated(player);
-        });
-
-        roomRef.child('status').on('value', (snapshot) => {
-            const status = snapshot.val();
-            if (status === "playing") {
-                onGameStarted();
-            }
-        });
-
-        roomRef.child('currentPlayer').on('value', (snapshot) => {
-            if (snapshot.exists()) {
-                const currentPlayerId = snapshot.val();
-                if (!currentPlayerId) return;
-
-                if (!players || players.length === 0) {
-                    console.warn("Players array not initialized yet");
-                    return;
-                }
-
-                const playerIndex = players.findIndex(p => p.id === currentPlayerId);
-                if (playerIndex >= 0) {
-                    currentPlayer = playerIndex;
-                    updateCurrentTurn();
-                }
-            }
-        });
-    }
-
-    function updateGameUI(roomData) {
-        if (!roomData) return;
-
-        const playersData = roomData.players || {};
-        const playerList = isHost ?
-            document.getElementById('host-player-list') :
-            document.getElementById('guest-player-list');
-
-        playerList.innerHTML = '';
-
-        let readyCount = 0;
-        Object.keys(playersData).forEach(id => {
-            const player = playersData[id];
-            addPlayerToList(player.name, id, id === roomData.host, player.ready);
-            if (player.ready) readyCount++;
-        });
-
-        if (isHost) {
-            const startBtn = document.getElementById('host-start-btn');
-            const totalPlayers = Object.keys(playersData).length;
-
-            startBtn.disabled = !(roomData.status === "waiting" &&
-                                 totalPlayers >= 2 &&
-                                 readyCount === totalPlayers);
+            document.getElementById(screenId).classList.add('active');
         }
-    }
 
-    function addPlayerToList(name, id, isAdmin, isReady) {
-        const playerList = isHost ?
-            document.getElementById('host-player-list') :
-            document.getElementById('guest-player-list');
+        function generateId() {
+            return 'player-' + Math.random().toString(36).substr(2, 9);
+        }
 
-        const playerItem = document.createElement('div');
-        playerItem.className = 'player-item';
-        playerItem.innerHTML = `
-            <div class="player-info">
-                <div class="player-avatar">${name[0].toUpperCase()}</div>
-                <span>${name}</span>
-            </div>
-            <span class="player-status ${isAdmin ? 'admin' : ''} ${isReady ? 'ready' : ''}">
-                ${isAdmin ? 'Admin' : (isReady ? 'Ready' : 'Waiting')}
-            </span>
-        `;
-        playerList.appendChild(playerItem);
-    }
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
 
-    function onPlayerJoined(player) {
-        console.log('Player joined:', player.name);
-    }
+        // === FIREBASE FUNCTIONS ===
+        function createRoom(playerName) {
+            myPlayerId = generateId();
+            roomCode = generateRoomCode();
+            roomRef = database.ref('rooms/' + roomCode);
 
-    function onPlayerUpdated(player) {
-        console.log('Player updated:', player);
+            const roomData = {
+                host: myPlayerId,
+                players: {
+                    [myPlayerId]: {
+                        name: playerName,
+                        position: 1,
+                        color: colors[0],
+                        ready: true,
+                        isCurrent: false
+                    }
+                },
+                currentPlayer: myPlayerId,
+                status: "waiting",
+                maxPlayers: maxPlayers,
+                taskMode: taskMode,
+                customTasks: {},
+                warningCells: warningCells,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
 
-        if (roomRef && roomCode && myPlayerId) {
-            roomRef.once('value').then(snapshot => {
+            return roomRef.set(roomData).then(() => {
+                setupRoomListeners();
+                return roomCode;
+            });
+        }
+
+        function joinRoom(playerName, code) {
+            myPlayerId = generateId();
+            roomCode = code.toUpperCase();
+            roomRef = database.ref('rooms/' + roomCode);
+
+            return roomRef.once('value').then((snapshot) => {
+                if (!snapshot.exists()) {
+                    throw new Error('Room tidak ditemukan');
+                }
+
                 const roomData = snapshot.val();
-                if (roomData.status === "playing") {
-                    positions[player.name] = player.position;
-                    updatePieces();
-                    updateScoreboard();
+                const playerCount = Object.keys(roomData.players || {}).length;
 
-                    if (player.position >= 100) {
-                        showWinner(player);
+                if (playerCount >= roomData.maxPlayers) {
+                    throw new Error('Room sudah penuh');
+                }
+
+                return roomRef.child('players/' + myPlayerId).set({
+                    name: playerName,
+                    position: 1,
+                    color: colors[playerCount % colors.length],
+                    ready: false,
+                    isCurrent: false
+                });
+            }).then(() => {
+                setupRoomListeners();
+                switchScreen('guest-lobby-screen');
+                document.getElementById('guest-room-code').textContent = roomCode;
+                return roomCode;
+            });
+        }
+
+        function setupRoomListeners() {
+            roomRef.on('value', (snapshot) => {
+                const roomData = snapshot.val();
+                if (roomData) {
+                    updateGameUI(roomData);
+                    if (roomData.taskMode === 'manual' && roomData.customTasks) {
+                        customTasks = roomData.customTasks;
+                        warningCells = roomData.warningCells || warningCells;
+                    }
+                }
+            });
+
+            roomRef.child('players').on('child_added', (snapshot) => {
+                const player = snapshot.val();
+                onPlayerJoined(player);
+            });
+
+            roomRef.child('players').on('child_changed', (snapshot) => {
+                const player = snapshot.val();
+                onPlayerUpdated(player);
+            });
+
+            roomRef.child('status').on('value', (snapshot) => {
+                const status = snapshot.val();
+                if (status === "playing") {
+                    onGameStarted();
+                }
+            });
+
+            roomRef.child('currentPlayer').on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    const currentPlayerId = snapshot.val();
+                    if (!currentPlayerId) return;
+
+                    if (!players || players.length === 0) {
+                        console.warn("Players array not initialized yet");
+                        return;
+                    }
+
+                    const playerIndex = players.findIndex(p => p.id === currentPlayerId);
+                    if (playerIndex >= 0) {
+                        currentPlayer = playerIndex;
+                        updateCurrentTurn();
                     }
                 }
             });
         }
-    }
 
-    function onGameStarted() {
-        roomRef.once('value').then(snapshot => {
-            const roomData = snapshot.val();
-            if (!roomData || roomData.status !== "playing") return;
+        function updateGameUI(roomData) {
+            if (!roomData) return;
 
-            players = Object.entries(roomData.players || {}).map(([id, player], index) => ({
-                id: id,
-                name: player.name,
-                color: player.color,
-                number: index + 1
-            }));
+            const playersData = roomData.players || {};
+            const playerList = isHost ?
+                document.getElementById('host-player-list') :
+                document.getElementById('guest-player-list');
 
-            positions = {};
-            Object.entries(roomData.players || {}).forEach(([id, player]) => {
-                positions[player.name] = player.position;
+            playerList.innerHTML = '';
+
+            let readyCount = 0;
+            Object.keys(playersData).forEach(id => {
+                const player = playersData[id];
+                addPlayerToList(player.name, id, id === roomData.host, player.ready);
+                if (player.ready) readyCount++;
             });
 
-            if (roomData.currentPlayer) {
-                currentPlayer = players.findIndex(p => p.id === roomData.currentPlayer);
-                if (currentPlayer === -1) {
-                    currentPlayer = 0;
-                }
-            } else {
-                currentPlayer = 0;
+            if (isHost) {
+                const startBtn = document.getElementById('host-start-btn');
+                const totalPlayers = Object.keys(playersData).length;
+
+                startBtn.disabled = !(roomData.status === "waiting" &&
+                                     totalPlayers >= 2 &&
+                                     readyCount === totalPlayers);
             }
+        }
 
-            taskMode = roomData.taskMode || 'system';
-            customTasks = roomData.customTasks || {};
-            warningCells = roomData.warningCells || warningCells;
+        function addPlayerToList(name, id, isAdmin, isReady) {
+            const playerList = isHost ?
+                document.getElementById('host-player-list') :
+                document.getElementById('guest-player-list');
 
-            initBoard();
-            updateScoreboard();
-            updateCurrentTurn();
+            const playerItem = document.createElement('div');
+            playerItem.className = 'player-item';
+            playerItem.innerHTML = `
+                <div class="player-info">
+                    <div class="player-avatar">${name[0].toUpperCase()}</div>
+                    <span>${name}</span>
+                </div>
+                <span class="player-status ${isAdmin ? 'admin' : ''} ${isReady ? 'ready' : ''}">
+                    ${isAdmin ? 'Admin' : (isReady ? 'Ready' : 'Waiting')}
+                </span>
+            `;
+            playerList.appendChild(playerItem);
+        }
 
-            document.getElementById('online-status').style.display = 'block';
-            document.getElementById('room-code-badge').textContent = "Room: " + roomCode;
+        function onPlayerJoined(player) {
+            console.log('Player joined:', player.name);
+        }
 
-            switchScreen('game-screen');
-            initVoiceControl();
-        }).catch(error => {
-            console.error("Error in onGameStarted:", error);
-        });
-    }
+        function onPlayerUpdated(player) {
+            console.log('Player updated:', player);
 
-    // === GAME LOGIC ===
-    function initGame() {
-        document.getElementById('start-btn').onclick = function() {
-            switchScreen('mode-screen');
-        };
+            if (roomRef && roomCode && myPlayerId) {
+                roomRef.once('value').then(snapshot => {
+                    const roomData = snapshot.val();
+                    if (roomData.status === "playing") {
+                        positions[player.name] = player.position;
+                        updatePieces();
+                        updateScoreboard();
 
-        document.getElementById('offline-mode').onclick = function() {
-            isOnlineGame = false;
-            switchScreen('rules-screen');
-        };
-
-        document.getElementById('online-mode').onclick = function() {
-            isOnlineGame = true;
-            switchScreen('online-options-screen');
-        };
-
-        document.getElementById('system-mode').onclick = function() {
-            document.getElementById('system-mode').classList.add('selected');
-            document.getElementById('manual-mode').classList.remove('selected');
-            taskMode = 'system';
-        };
-
-        document.getElementById('manual-mode').onclick = function() {
-            document.getElementById('manual-mode').classList.add('selected');
-            document.getElementById('system-mode').classList.remove('selected');
-            taskMode = 'manual';
-        };
-
-        document.getElementById('task-mode-confirm').onclick = function() {
-            if (!taskMode) {
-                alert('Pilih mode tantangan terlebih dahulu');
-                return;
+                        if (player.position >= 100) {
+                            showWinner(player);
+                        }
+                    }
+                });
             }
+        }
 
-            if (taskMode === 'system') {
-                warningCells = [12, 22, 35, 48, 63, 77, 85, 95];
-                initBoard();
-                updateScoreboard();
-                updateCurrentTurn();
-                switchScreen('game-screen');
-                initVoiceControl();
-            } else {
-                setupCustomTasks();
-            }
-        };
+        function onGameStarted() {
+            roomRef.once('value').then(snapshot => {
+                const roomData = snapshot.val();
+                if (!roomData || roomData.status !== "playing") return;
 
-        document.getElementById('add-task-btn').onclick = addCustomTask;
-        document.getElementById('finish-tasks-btn').onclick = finishPlayerTasks;
+                players = Object.entries(roomData.players || {}).map(([id, player], index) => ({
+                    id: id,
+                    name: player.name,
+                    color: player.color,
+                    number: index + 1
+                }));
 
-        document.getElementById('create-room-btn').onclick = function() {
-            isHost = true;
-            switchScreen('create-room-screen');
-        };
-
-        document.getElementById('join-room-btn').onclick = function() {
-            isHost = false;
-            switchScreen('join-room-screen');
-        };
-
-        document.getElementById('create-room-confirm').onclick = function() {
-            const name = document.getElementById('host-name').value;
-            maxPlayers = parseInt(document.getElementById('max-players').value);
-            taskMode = document.getElementById('task-mode').value;
-
-            if (!name) {
-                alert('Mohon masukkan nama Anda');
-                return;
-            }
-
-            createRoom(name).then(code => {
-                document.getElementById('room-code-display').textContent = code;
-                switchScreen('host-lobby-screen');
-
-                if (taskMode === 'manual') {
-                    document.getElementById('host-custom-tasks-section').style.display = 'block';
-                }
-            }).catch(error => {
-                alert('Gagal membuat room: ' + error.message);
-            });
-        };
-
-        document.getElementById('host-setup-tasks-btn').onclick = function() {
-            roomRef.child('players').once('value').then(snapshot => {
-                const playersData = snapshot.val();
-                players = [];
-
-                Object.keys(playersData).forEach((id, index) => {
-                    const player = playersData[id];
-                    players.push({
-                        name: player.name,
-                        color: player.color,
-                        number: index + 1,
-                        id: id
-                    });
+                positions = {};
+                Object.entries(roomData.players || {}).forEach(([id, player]) => {
                     positions[player.name] = player.position;
                 });
 
-                setupCustomTasks();
-            });
-        };
+                if (roomData.currentPlayer) {
+                    currentPlayer = players.findIndex(p => p.id === roomData.currentPlayer);
+                    if (currentPlayer === -1) {
+                        currentPlayer = 0;
+                    }
+                } else {
+                    currentPlayer = 0;
+                }
 
-        document.getElementById('join-room-confirm').onclick = function() {
-            const name = document.getElementById('join-player-name').value;
-            const code = document.getElementById('room-code').value;
+                taskMode = roomData.taskMode || 'system';
+                customTasks = roomData.customTasks || {};
+                warningCells = roomData.warningCells || warningCells;
 
-            if (!name || !code) {
-                alert('Mohon masukkan nama dan kode room');
-                return;
-            }
+                initBoard();
+                updateScoreboard();
+                updateCurrentTurn();
 
-            joinRoom(name, code).then(code => {
-                document.getElementById('guest-room-code').textContent = code;
+                document.getElementById('online-status').style.display = 'block';
+                document.getElementById('room-code-badge').textContent = "Room: " + roomCode;
+
+                switchScreen('game-screen');
+                initVoiceControl();
             }).catch(error => {
-                alert('Gagal bergabung: ' + error.message);
-                switchScreen('online-options-screen');
+                console.error("Error in onGameStarted:", error);
             });
-        };
+        }
 
-        document.getElementById('guest-ready-btn').onclick = function() {
-            if (!isHost && roomRef && myPlayerId) {
-                roomRef.child('players/' + myPlayerId + '/ready').set(true)
-                    .then(() => {
-                        alert("Status Anda sudah siap! Menunggu host memulai game...");
-                    })
-                    .catch(error => {
-                        alert("Error: " + error.message);
-                    });
-            }
-        };
-
-        document.getElementById('host-start-btn').onclick = function() {
-            roomRef.child('status').once('value').then(snapshot => {
-                const status = snapshot.val();
-                if (status === "waiting") {
-                    startGame().then(() => {
-                        console.log("Game dimulai!");
-                    }).catch(error => {
-                        console.error("Error:", error);
-                        alert('Gagal memulai game: ' + error);
-                    });
-                } else {
-                    console.log("Game sudah berjalan");
-                }
-            });
-        };
-
-        document.getElementById('online-start-btn').onclick = function() {
-            if (!isHost && roomRef && myPlayerId) {
-                roomRef.child('players/' + myPlayerId + '/ready').set(true)
-                    .then(() => {
-                        switchScreen('game-screen');
-                        initVoiceControl();
-                    })
-                    .catch(error => {
-                        alert("Error: " + error.message);
-                    });
-            }
-        };
-
-        document.getElementById('next-btn').onclick = function() {
-            switchScreen('count-screen');
-        };
-
-        const countButtons = document.querySelectorAll('.count-btn');
-        countButtons.forEach(function(button) {
-            button.onclick = function() {
-                playerCount = parseInt(this.getAttribute('data-count'));
-                setupPlayerInputs();
-                switchScreen('names-screen');
+        // === GAME LOGIC ===
+        function initGame() {
+            document.getElementById('start-btn').onclick = function() {
+                switchScreen('mode-screen');
             };
-        });
 
-        document.getElementById('start-game-btn').onclick = function() {
-            const inputs = document.querySelectorAll('#player-inputs input');
-            players = [];
-            positions = {};
+            document.getElementById('offline-mode').onclick = function() {
+                isOnlineGame = false;
+                switchScreen('rules-screen');
+            };
 
-            let valid = true;
-            let names = new Set();
-            inputs.forEach((input, index) => {
-                const name = input.value.trim();
-                if (!name) {
-                    alert(`Masukkan nama untuk Pemain ${index + 1}`);
-                    valid = false;
-                } else if (names.has(name)) {
-                    alert(`Nama "${name}" sudah digunakan. Pilih nama lain.`);
-                    valid = false;
-                } else {
-                    names.add(name);
-                    players.push({
-                        name: name,
-                        color: colors[index % colors.length],
-                        number: index + 1,
-                        id: generateId()
-                    });
-                    positions[name] = 1;
+            document.getElementById('online-mode').onclick = function() {
+                isOnlineGame = true;
+                switchScreen('online-options-screen');
+            };
+
+            document.getElementById('system-mode').onclick = function() {
+                document.getElementById('system-mode').classList.add('selected');
+                document.getElementById('manual-mode').classList.remove('selected');
+                taskMode = 'system';
+            };
+
+            document.getElementById('manual-mode').onclick = function() {
+                document.getElementById('manual-mode').classList.add('selected');
+                document.getElementById('system-mode').classList.remove('selected');
+                taskMode = 'manual';
+            };
+
+            document.getElementById('task-mode-confirm').onclick = function() {
+                if (!taskMode) {
+                    alert('Pilih mode tantangan terlebih dahulu');
+                    return;
                 }
-            });
 
-            if (valid) {
-                switchScreen('task-mode-screen');
-            }
-        };
-
-        document.getElementById('roll-btn').onclick = rollDice;
-        document.getElementById('mic-btn').onclick = toggleVoiceControl;
-        document.getElementById('truth-btn').onclick = function() {
-            showTask('truth');
-        };
-        document.getElementById('dare-btn').onclick = function() {
-            showTask('dare');
-        };
-        document.getElementById('continue-btn').onclick = function() {
-            document.getElementById('truth-dare-modal').style.display = 'none';
-            document.getElementById('truth-btn').style.display = 'block';
-            document.getElementById('dare-btn').style.display = 'block';
-            document.getElementById('continue-btn').style.display = 'none';
-            document.getElementById('task-result').innerHTML = '';
-            nextPlayer();
-        };
-        document.getElementById('play-again-btn').onclick = function() {
-            window.location.reload();
-        };
-    }
-
-    function setupPlayerInputs() {
-        const container = document.getElementById('player-inputs');
-        container.innerHTML = '';
-        for (let i = 0; i < playerCount; i++) {
-            const inputDiv = document.createElement('div');
-            inputDiv.className = 'player-input';
-            inputDiv.innerHTML = `
-                <div class="color-preview" style="background-color: ${colors[i % colors.length]}">${i + 1}</div>
-                <input type="text" placeholder="Nama Pemain ${i + 1}" maxlength="20">
-            `;
-            container.appendChild(inputDiv);
-        }
-    }
-
-    function setupCustomTasks() {
-        currentTaskPlayer = 0;
-        playerTasks = [];
-        customTasks = {};
-        warningCells = [];
-
-        switchScreen('custom-task-screen');
-        updateTaskProgress();
-    }
-
-    function updateTaskProgress() {
-        const progress = document.getElementById('player-task-progress');
-        document.getElementById('current-player-name').textContent = players[currentTaskPlayer].name;
-        document.getElementById('current-player-number').textContent = currentTaskPlayer + 1;
-        document.getElementById('total-players').textContent = players.length;
-
-        const finishBtn = document.getElementById('finish-tasks-btn');
-        finishBtn.disabled = playerTasks.length < 2;
-        updateTaskList();
-    }
-
-    function addCustomTask() {
-        const type = document.getElementById('task-type').value;
-        const text = document.getElementById('task-text').value.trim();
-        const cell = parseInt(document.getElementById('task-cell').value);
-
-        if (!text) {
-            alert('Masukkan tantangan!');
-            return;
-        }
-
-        if (isNaN(cell) || cell < 2 || cell > 99) {
-            alert('Masukkan nomor kotak antara 2 dan 99!');
-            return;
-        }
-
-        if (restrictedCells.includes(cell)) {
-            alert('Kotak ini adalah ular atau tangga! Pilih kotak lain.');
-            return;
-        }
-
-        if (playerTasks.some(task => task.cell === cell)) {
-            alert('Kotak ini sudah digunakan untuk tantangan lain!');
-            return;
-        }
-
-        playerTasks.push({
-            type: type,
-            text: text,
-            cell: cell,
-            player: players[currentTaskPlayer].name
-        });
-
-        if (!customTasks[cell]) {
-            customTasks[cell] = [];
-            warningCells.push(cell);
-        }
-        customTasks[cell].push({
-            type: type,
-            text: text,
-            player: players[currentTaskPlayer].name
-        });
-
-        document.getElementById('task-type').value = 'truth';
-        document.getElementById('task-text').value = '';
-        document.getElementById('task-cell').value = '';
-        updateTaskList();
-
-        const finishBtn = document.getElementById('finish-tasks-btn');
-        finishBtn.disabled = playerTasks.length < 2;
-    }
-
-    function updateTaskList() {
-        const taskList = document.getElementById('task-list');
-        taskList.innerHTML = '';
-
-        if (playerTasks.length === 0) {
-            taskList.innerHTML = '<p class="text-center">Belum ada tantangan ditambahkan</p>';
-            return;
-        }
-
-        playerTasks.forEach((task, index) => {
-            const taskItem = document.createElement('div');
-            taskItem.className = 'task-item';
-            taskItem.innerHTML = `
-                <div class="task-item-info">
-                    <span class="task-item-type">${task.type.toUpperCase()}</span>: ${task.text}
-                    <div class="task-item-cell">Kotak: ${task.cell}</div>
-                </div>
-                <i class="fas fa-trash task-item-delete" onclick="deleteTask(${index})"></i>
-            `;
-            taskList.appendChild(taskItem);
-        });
-    }
-
-    function deleteTask(index) {
-        const task = playerTasks[index];
-        playerTasks.splice(index, 1);
-
-        customTasks[task.cell] = customTasks[task.cell].filter(t => t.text !== task.text);
-        if (customTasks[task.cell].length === 0) {
-            delete customTasks[task.cell];
-            warningCells = warningCells.filter(cell => cell !== task.cell);
-        }
-
-        updateTaskList();
-        document.getElementById('finish-tasks-btn').disabled = playerTasks.length < 2;
-    }
-
-    function finishPlayerTasks() {
-        if (playerTasks.length < 2) {
-            alert('Tambahkan setidaknya 2 tantangan sebelum melanjutkan!');
-            return;
-        }
-
-        currentTaskPlayer++;
-        if (currentTaskPlayer >= players.length) {
-            if (isOnlineGame && isHost) {
-                roomRef.update({
-                    customTasks: customTasks,
-                    warningCells: warningCells
-                }).then(() => {
+                if (taskMode === 'system') {
+                    warningCells = [12, 22, 35, 48, 63, 77, 85, 95];
                     initBoard();
                     updateScoreboard();
                     updateCurrentTurn();
                     switchScreen('game-screen');
                     initVoiceControl();
+                } else {
+                    setupCustomTasks();
+                }
+            };
+
+            document.getElementById('add-task-btn').onclick = addCustomTask;
+            document.getElementById('finish-tasks-btn').onclick = finishPlayerTasks;
+
+            document.getElementById('create-room-btn').onclick = function() {
+                isHost = true;
+                switchScreen('create-room-screen');
+            };
+
+            document.getElementById('join-room-btn').onclick = function() {
+                isHost = false;
+                switchScreen('join-room-screen');
+            };
+
+            document.getElementById('create-room-confirm').onclick = function() {
+                const name = document.getElementById('host-name').value;
+                maxPlayers = parseInt(document.getElementById('max-players').value);
+                taskMode = document.getElementById('task-mode').value;
+
+                if (!name) {
+                    alert('Mohon masukkan nama Anda');
+                    return;
+                }
+
+                createRoom(name).then(code => {
+                    document.getElementById('room-code-display').textContent = code;
+                    switchScreen('host-lobby-screen');
+
+                    if (taskMode === 'manual') {
+                        document.getElementById('host-custom-tasks-section').style.display = 'block';
+                    }
+                }).catch(error => {
+                    alert('Gagal membuat room: ' + error.message);
                 });
-            } else {
-                initBoard();
-                updateScoreboard();
-                updateCurrentTurn();
-                switchScreen('game-screen');
-                initVoiceControl();
+            };
+
+            document.getElementById('host-setup-tasks-btn').onclick = function() {
+                roomRef.child('players').once('value').then(snapshot => {
+                    const playersData = snapshot.val();
+                    players = [];
+
+                    Object.keys(playersData).forEach((id, index) => {
+                        const player = playersData[id];
+                        players.push({
+                            name: player.name,
+                            color: player.color,
+                            number: index + 1,
+                            id: id
+                        });
+                        positions[player.name] = player.position;
+                    });
+
+                    setupCustomTasks();
+                });
+            };
+
+            document.getElementById('join-room-confirm').onclick = function() {
+                const name = document.getElementById('join-player-name').value;
+                const code = document.getElementById('room-code').value;
+
+                if (!name || !code) {
+                    alert('Mohon masukkan nama dan kode room');
+                    return;
+                }
+
+                joinRoom(name, code).then(code => {
+                    document.getElementById('guest-room-code').textContent = code;
+                }).catch(error => {
+                    alert('Gagal bergabung: ' + error.message);
+                    switchScreen('online-options-screen');
+                });
+            };
+
+            document.getElementById('guest-ready-btn').onclick = function() {
+                if (!isHost && roomRef && myPlayerId) {
+                    roomRef.child('players/' + myPlayerId + '/ready').set(true)
+                        .then(() => {
+                            alert("Status Anda sudah siap! Menunggu host memulai game...");
+                        })
+                        .catch(error => {
+                            alert("Error: " + error.message);
+                        });
+                }
+            };
+
+            document.getElementById('host-start-btn').onclick = function() {
+                roomRef.child('status').once('value').then(snapshot => {
+                    const status = snapshot.val();
+                    if (status === "waiting") {
+                        startGame().then(() => {
+                            console.log("Game dimulai!");
+                        }).catch(error => {
+                            console.error("Error:", error);
+                            alert('Gagal memulai game: ' + error);
+                        });
+                    } else {
+                        console.log("Game sudah berjalan");
+                    }
+                });
+            };
+
+            document.getElementById('online-start-btn').onclick = function() {
+                if (!isHost && roomRef && myPlayerId) {
+                    roomRef.child('players/' + myPlayerId + '/ready').set(true)
+                        .then(() => {
+                            switchScreen('game-screen');
+                            initVoiceControl();
+                        })
+                        .catch(error => {
+                            alert("Error: " + error.message);
+                        });
+                }
+            };
+
+            document.getElementById('next-btn').onclick = function() {
+                switchScreen('count-screen');
+            };
+
+            const countButtons = document.querySelectorAll('.count-btn');
+            countButtons.forEach(function(button) {
+                button.onclick = function() {
+                    playerCount = parseInt(this.getAttribute('data-count'));
+                    setupPlayerInputs();
+                    switchScreen('names-screen');
+                };
+            });
+
+            document.getElementById('start-game-btn').onclick = function() {
+                const inputs = document.querySelectorAll('#player-inputs input');
+                players = [];
+                positions = {};
+
+                let valid = true;
+                let names = new Set();
+                inputs.forEach((input, index) => {
+                    const name = input.value.trim();
+                    if (!name) {
+                        alert(`Masukkan nama untuk Pemain ${index + 1}`);
+                        valid = false;
+                    } else if (names.has(name)) {
+                        alert(`Nama "${name}" sudah digunakan. Pilih nama lain.`);
+                        valid = false;
+                    } else {
+                        names.add(name);
+                        players.push({
+                            name: name,
+                            color: colors[index % colors.length],
+                            number: index + 1,
+                            id: generateId()
+                        });
+                        positions[name] = 1;
+                    }
+                });
+
+                if (valid) {
+                    switchScreen('task-mode-screen');
+                }
+            };
+
+            document.getElementById('roll-btn').onclick = rollDice;
+            document.getElementById('mic-btn').onclick = toggleVoiceControl;
+            document.getElementById('truth-btn').onclick = function() {
+                showTask('truth');
+            };
+            document.getElementById('dare-btn').onclick = function() {
+                showTask('dare');
+            };
+            document.getElementById('continue-btn').onclick = function() {
+                document.getElementById('truth-dare-modal').style.display = 'none';
+                document.getElementById('truth-btn').style.display = 'block';
+                document.getElementById('dare-btn').style.display = 'block';
+                document.getElementById('continue-btn').style.display = 'none';
+                document.getElementById('task-result').innerHTML = '';
+                nextPlayer();
+            };
+            document.getElementById('play-again-btn').onclick = function() {
+                window.location.reload();
+            };
+        }
+
+        function setupPlayerInputs() {
+            const container = document.getElementById('player-inputs');
+            container.innerHTML = '';
+            for (let i = 0; i < playerCount; i++) {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'player-input';
+                inputDiv.innerHTML = `
+                    <div class="color-preview" style="background-color: ${colors[i % colors.length]}">${i + 1}</div>
+                    <input type="text" placeholder="Nama Pemain ${i + 1}" maxlength="20">
+                `;
+                container.appendChild(inputDiv);
             }
-        } else {
+        }
+
+        function setupCustomTasks() {
+            currentTaskPlayer = 0;
             playerTasks = [];
+            customTasks = {};
+            warningCells = [];
+
+            switchScreen('custom-task-screen');
             updateTaskProgress();
         }
-    }
 
+        function updateTaskProgress() {
+            const progress = document.getElementById('player-task-progress');
+            document.getElementById('current-player-name').textContent = players[currentTaskPlayer].name;
+            document.getElementById('current-player-number').textContent = currentTaskPlayer + 1;
+            document.getElementById('total-players').textContent = players.length;
+
+            const finishBtn = document.getElementById('finish-tasks-btn');
+            finishBtn.disabled = playerTasks.length < 2;
+            updateTaskList();
+        }
+
+        function addCustomTask() {
+            const type = document.getElementById('task-type').value;
+            const text = document.getElementById('task-text').value.trim();
+            const cell = parseInt(document.getElementById('task-cell').value);
+
+            if (!text) {
+                alert('Masukkan tantangan!');
+                return;
+            }
+
+            if (isNaN(cell) || cell < 2 || cell > 99) {
+                alert('Masukkan nomor kotak antara 2 dan 99!');
+                return;
+            }
+
+            if (restrictedCells.includes(cell)) {
+                alert('Kotak ini adalah ular atau tangga! Pilih kotak lain.');
+                return;
+            }
+
+            if (playerTasks.some(task => task.cell === cell)) {
+                alert('Kotak ini sudah digunakan untuk tantangan lain!');
+                return;
+            }
+
+            playerTasks.push({
+                type: type,
+                text: text,
+                cell: cell,
+                player: players[currentTaskPlayer].name
+            });
+
+            if (!customTasks[cell]) {
+                customTasks[cell] = [];
+                warningCells.push(cell);
+            }
+            customTasks[cell].push({
+                type: type,
+                text: text,
+                player: players[currentTaskPlayer].name
+            });
+
+            document.getElementById('task-type').value = 'truth';
+            document.getElementById('task-text').value = '';
+            document.getElementById('task-cell').value = '';
+            updateTaskList();
+
+            const finishBtn = document.getElementById('finish-tasks-btn');
+            finishBtn.disabled = playerTasks.length < 2;
+        }
+
+        function updateTaskList() {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+
+            if (playerTasks.length === 0) {
+                taskList.innerHTML = '<p class="text-center">Belum ada tantangan ditambahkan</p>';
+                return;
+            }
+
+            playerTasks.forEach((task, index) => {
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                taskItem.innerHTML = `
+                    <div class="task-item-info">
+                        <span class="task-item-type">${task.type.toUpperCase()}</span>: ${task.text}
+                        <div class="task-item-cell">Kotak: ${task.cell}</div>
+                    </div>
+                    <i class="fas fa-trash task-item-delete" onclick="deleteTask(${index})"></i>
+                `;
+                taskList.appendChild(taskItem);
+            });
+        }
+
+        function deleteTask(index) {
+            const task = playerTasks[index];
+            playerTasks.splice(index, 1);
+
+            customTasks[task.cell] = customTasks[task.cell].filter(t => t.text !== task.text);
+            if (customTasks[task.cell].length === 0) {
+                delete customTasks[task.cell];
+                warningCells = warningCells.filter(cell => cell !== task.cell);
+            }
+
+            updateTaskList();
+            document.getElementById('finish-tasks-btn').disabled = playerTasks.length < 2;
+        }
+
+        function finishPlayerTasks() {
+            if (playerTasks.length < 2) {
+                alert('Tambahkan setidaknya 2 tantangan sebelum melanjutkan!');
+                return;
+            }
+
+            currentTaskPlayer++;
+            if (currentTaskPlayer >= players.length) {
+                if (isOnlineGame && isHost) {
+                    roomRef.update({
+                        customTasks: customTasks,
+                        warningCells: warningCells
+                    }).then(() => {
+                        initBoard();
+                        updateScoreboard();
+                        updateCurrentTurn();
+                        switchScreen('game-screen');
+                        initVoiceControl();
+                    });
+                } else {
+                    initBoard();
+                    updateScoreboard();
+                    updateCurrentTurn();
+                    switchScreen('game-screen');
+                    initVoiceControl();
+                }
+            } else {
+                playerTasks = [];
+                updateTaskProgress();
+            }
+        }
+
+        function initBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+
+        
     function initBoard() {
         const board = document.getElementById('game-board');
         board.innerHTML = '';
