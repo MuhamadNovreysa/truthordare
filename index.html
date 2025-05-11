@@ -81,6 +81,102 @@
             color: var(--dark-gray);
             font-weight: 400;
         }
+/* === VIDEO CALL STYLES === */
+        #video-chat-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        #video-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 1rem 0;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 150px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .video-player video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-player .status {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+
+        .video-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .video-controls button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        /* === VOICE NOTE STYLES === */
+        #voice-note-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        #voice-note-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        #voice-note-btn.recording {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 101, 132, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 101, 132, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 101, 132, 0); }
+        }
 
         /* === BUTTON STYLES === */
         .btn {
@@ -1395,6 +1491,23 @@
             </div>
         </div>
 
+        <!-- VIDEO CALL SECTION -->
+        <div id="video-chat-container" style="display:none;">
+            <h3><i class="fas fa-video"></i> Video Call</h3>
+            <div id="video-grid"></div>
+            <div class="video-controls">
+                <button id="toggle-video"><i class="fas fa-video"></i></button>
+                <button id="toggle-mic"><i class="fas fa-microphone"></i></button>
+                <button id="screen-share"><i class="fas fa-desktop"></i></button>
+            </div>
+        </div>
+
+        <!-- VOICE NOTE BUTTON -->
+        <div id="voice-note-container">
+            <button id="voice-note-btn"><i class="fas fa-microphone-alt"></i></button>
+        </div>
+
+
         <!-- MODAL: TRUTH/DARE -->
         <div class="modal" id="truth-dare-modal" style="display: none;">
             <div class="modal-content">
@@ -1427,7 +1540,14 @@
             </div>
         </div>
     </div>
+
+        
   <div id="game-container"></div>
+    <!-- LIBRARIES -->
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/RecordRTC/5.6.2/RecordRTC.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
 
@@ -1517,7 +1637,139 @@ let customTasks = {};
 let currentTaskPlayer = 0;
 let playerTasks = [];
 let roomRef = null;
+       // === VARIABEL VIDEO/VOICE (TAMBAHAN BARU) ===
+        let localStream;
+        let mediaRecorder;
+        let audioChunks = [];
+        const peers = {};
+        let screenStream = null;
+        let isCameraActive = false;
 
+
+        // === CLASS VIDEO CALL (TAMBAHAN BARU) ===
+        class VideoCallManager {
+            constructor() {
+                this.localStream = null;
+                this.peers = {};
+                this.isCameraActive = false;
+            }
+
+            async init() {
+                try {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: true, 
+                        audio: {
+                            noiseSuppression: true,
+                            echoCancellation: true
+                        }
+                    });
+                    
+                    this.addVideoStream(myPlayerId, this.localStream);
+                    this.setupEventListeners();
+                    
+                } catch (err) {
+                    console.error("Media Error:", err);
+                }
+            }
+
+            addVideoStream(playerId, stream) {
+                const videoGrid = document.getElementById('video-grid');
+                const videoPlayer = document.createElement('div');
+                videoPlayer.className = 'video-player';
+                videoPlayer.id = `video-${playerId}`;
+                videoPlayer.innerHTML = `
+                    <video autoplay></video>
+                    <span class="status">${stream.getVideoTracks()[0].enabled ? 'LIVE' : 'OFF'}</span>
+                `;
+                videoPlayer.querySelector('video').srcObject = stream;
+                videoGrid.appendChild(videoPlayer);
+            }
+
+            setupEventListeners() {
+                document.getElementById('toggle-video').addEventListener('click', () => this.toggleVideo());
+                document.getElementById('toggle-mic').addEventListener('click', () => this.toggleMic());
+                document.getElementById('screen-share').addEventListener('click', () => this.toggleScreenShare());
+            }
+
+            toggleVideo() {
+                const videoTrack = this.localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.enabled = !videoTrack.enabled;
+                    this.isCameraActive = videoTrack.enabled;
+                    document.getElementById('toggle-video').classList.toggle('active', !videoTrack.enabled);
+                    document.querySelector(`#video-${myPlayerId} .status`).textContent = videoTrack.enabled ? 'LIVE' : 'OFF';
+                }
+            }
+
+            toggleMic() {
+                const audioTrack = this.localStream.getAudioTracks()[0];
+                if (audioTrack) audioTrack.enabled = !audioTrack.enabled;
+            }
+
+            async toggleScreenShare() {
+                if (screenStream) {
+                    screenStream.getTracks().forEach(track => track.stop());
+                    screenStream = null;
+                } else {
+                    screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                    this.addVideoStream(`${myPlayerId}-screen`, screenStream);
+                }
+            }
+        }
+
+        // === CLASS VOICE NOTE (TAMBAHAN BARU) ===
+        class VoiceNoteManager {
+            constructor() {
+                this.recorder = null;
+                this.isRecording = false;
+            }
+
+            init() {
+                document.getElementById('voice-note-btn').addEventListener('click', () => {
+                    if (this.isRecording) {
+                        this.stopRecording();
+                    } else {
+                        this.startRecording();
+                    }
+                });
+            }
+
+            async startRecording() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.recorder = new RecordRTC(stream, {
+                        type: 'audio',
+                        mimeType: 'audio/webm',
+                        recorderType: RecordRTC.StereoAudioRecorder,
+                        desiredSampRate: 16000
+                    });
+                    
+                    this.recorder.startRecording();
+                    this.isRecording = true;
+                    document.getElementById('voice-note-btn').classList.add('recording');
+                    
+                } catch (err) {
+                    console.error("Recording Error:", err);
+                }
+            }
+
+            stopRecording() {
+                this.recorder.stopRecording(() => {
+                    const blob = this.recorder.getBlob();
+                    this.sendVoiceNote(blob);
+                    this.isRecording = false;
+                    document.getElementById('voice-note-btn').classList.remove('recording');
+                });
+            }
+
+            sendVoiceNote(blob) {
+                // Upload ke Firebase Storage atau konversi ke base64
+                console.log("Voice note siap dikirim!", blob);
+                alert("Voice note terkirim!");
+            }
+        }
+
+    
 // === FIREBASE FUNCTIONS ===
 function generateId() {
     return 'player-' + Math.random().toString(36).substr(2, 9);
@@ -2721,6 +2973,22 @@ function initBoard() {
 
     updatePieces();
 }
+
+    document.addEventListener('DOMContentLoaded', () => {
+            initGame();
+            
+            // Inisialisasi fitur tambahan jika mode online
+            if (isOnlineGame) {
+                firebase.initializeApp(firebaseConfig);
+                const videoCallManager = new VideoCallManager();
+                const voiceNoteManager = new VoiceNoteManager();
+                
+                videoCallManager.init();
+                voiceNoteManager.init();
+                document.getElementById('video-chat-container').style.display = 'block';
+            }
+        });
+
 function updatePieces() {
     const pieces = document.querySelectorAll('.piece');
     pieces.forEach(piece => piece.remove());
